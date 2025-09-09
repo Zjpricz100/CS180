@@ -1,5 +1,5 @@
 <h1 align="center">Hi 👋, I'm Zach</h1>
-<h3 align="center">An Electrical Engineering and Computer Sciences student with a passion for applying ML and DSP to meaningful applications..</h3>
+<h3 align="center">An Electrical Engineering and Computer Sciences student with a passion for applying ML and DSP to meaningful applications.</h3>
 
 - 🔭 I’m currently working on **RF LPI Anomaly Detection CNNs Using Pytorch**
 

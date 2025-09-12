@@ -207,10 +207,10 @@
 
             <section class="section">
                 <h2>Algorithm</h2>
-                <p>The algorithm starts with preprocessing. I first convert the images to float for memory efficiency, then separate the images into their respective color channels. With each channel sepearted, I first demean each image, crop away the border, then find the neccesary displacements along each axis to align the blue channel to the green channel, and I do the same for aligning the red channel to the green channel. The green channel serves as the reference channel for alignment. </p>
+                <p>The algorithm starts with preprocessing. I first convert the images to float for memory efficiency, then separate the images into their respective color channels. With each channel sepearted, I then demean each image, crop out the border (roughly 5% of each side), then find the neccesary displacements along each axis to align the blue channel to the green channel, and I do the same for aligning the red channel to the green channel. The green channel serves as the reference channel for alignment. </p>
 
                 <h3>Single-Scale Alignment</h3>
-                <p>For low resolution images, it is sufficient to search over a small window of possible displacements (e.g. [-15, 15] pixels), and for each displacement compute a metric to measure similarity between a given channel and the reference channel. The displacement values that perform best with that given metric are chosen, and I align the channel to the reference channel with those displacement values. Once the blue channel and red channel are sufficiently aligned, all three channels can be stacked to form the final color image! We have successfully brought color to the Russian Empire!</p>
+                <p>For low resolution images, it is sufficient to search over a small window of possible displacements (e.g. [-15, 15] pixels), and compute a similarity metric for each candidate displacement value. The displacement values that perform best with that given metric are chosen, and I align the input channel to the reference channel with those displacement values. Once the blue channel and red channel are sufficiently aligned relative to the reference channel, all three channels can be stacked to form the final color image! We have successfully brought color to the Russian Empire!</p>
 
                 
                 <h3>Image Matching Metrics</h3>
@@ -240,7 +240,7 @@
                 </div>
                 
                 <h3>Multiscale Implementation and Image Pyramid</h3>
-                <p>For large images, exhaustive search becomes prohibitively expensive. To remedy this, I implemented an image pyramid approach that processes images at multiple scales, starting from the coarsest (smallest) scale and refining the alignment estimate as it progresses down the pyramid to finer images. This means that each step down the pyramid, we are much closer to our optimal displacements, allowing us to search over a smaller window, improving the performance of the algorithm dramatically.</p>
+                <p>For large images, exhaustive search becomes prohibitively expensive. To account for large resolution images, I implemented an image pyramid approach that processes images at multiple scales, starting from the coarsest (smallest) scale and refining the alignment estimate as it progresses down the pyramid to finer images. In particular, each image size is doubled from one layer of the pyramid to the next. This means that each step down the pyramid, we are much closer to our optimal displacements, allowing us to search over a smaller window, improving the performance of the algorithm dramatically. For this project specifically, I chose to half the search space each time I traverse a layer down the pyramid. This allowed for accurate, but computationally efficient alignment for large image sizes</p>
                 
                 <div class="highlight">
                     <strong>Note:</strong> The image pyramid implementation relies heavily on how images are resized/downsampled. At first, I used a 5x5 gaussian kernel and convolved it with the original image, then cut out every other pixel. I later chose to use the resize function from skimage directly however both approaches provided good results.

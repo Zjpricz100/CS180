@@ -173,4 +173,8 @@ def colorize_all_images_in_data():
         colorize_single_image(full_path)
 
 # Example usage
-colorize_all_images_in_data()
+#colorize_all_images_in_data()
+
+colorize_single_image('data/personal/bird.tif')
+colorize_single_image('data/personal/ship.tif')
+colorize_single_image('data/personal/camel.tif')

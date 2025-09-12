@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 1 - Prokudin-Gorskii Color Reconstruction</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        /* Project-specific styles */
+        .project-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            padding: var(--spacing-xl) 0;
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .back-link::before {
+            content: "←";
+            margin-right: var(--spacing-xs);
+            font-weight: bold;
+        }
+        
+        .project-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+        
+        .section {
+            margin-bottom: var(--spacing-2xl);
+        }
+        
+        .section h2 {
+            color: var(--text-primary);
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: var(--spacing-xs);
+        }
+        
+        .section h3 {
+            color: var(--text-primary);
+            font-size: var(--font-size-xl);
+            margin-bottom: var(--spacing-sm);
+            margin-top: var(--spacing-lg);
+        }
+        
+        .section p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .section ul {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: var(--spacing-md);
+            padding-left: var(--spacing-lg);
+        }
+        
+        .section li {
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .image-container {
+            text-align: center;
+        }
+        
+        .image-container img {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+        
+        .image-container img:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .image-caption {
+            margin-top: var(--spacing-sm);
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        .displacement-info {
+            margin-top: var(--spacing-xs);
+            font-size: var(--font-size-sm);
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+        
+        .code-block {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin: var(--spacing-md) 0;
+            font-family: 'Courier New', monospace;
+            font-size: var(--font-size-sm);
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            background-color: rgba(132, 204, 22, 0.1);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .gif-section {
+            text-align: center;
+            margin: var(--spacing-lg) 0 var(--spacing-2xl) 0;
+        }
+        
+        .gif-image {
+            max-width: 100%;
+            height: auto;
+            box-shadow: var(--shadow-md);
+        }
+        
+        @media (max-width: 768px) {
+            .project-content {
+                padding: 0 var(--spacing-sm);
+            }
+            
+            .image-gallery {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-md);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="project-header">
+        <div class="container">
+            <a href="../index.html" class="back-link">Back to Portfolio</a>
+            <h1 class="title">Project 1</h1>
+            <p class="subtitle">Images of the Russian Empire</p>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="project-content">
+            <div class="gif-section">
+                <img src="all_output.gif" alt="All Output Animation" class="gif-image">
+            </div>
+            
+            <section class="section">
+                <h2>Project Overview</h2>
+                <p>This project focuses on reconstructing color images from the digitized glass plate negatives of Sergei Mikhailovich Prokudin-Gorskii, a Russian photographer who pioneered color photography in the early 1900s. Prokudin-Gorskii captured thousands of color photographs by taking three separate exposures of each scene using red, green, and blue filters, recording them onto glass plates.</p>
+                
+                <p>The challenge lies in automatically aligning these three color channel images to produce a single, artifact-free RGB color image. This requires sophisticated image processing techniques to handle the alignment of channels that may have slight positional differences due to the photographic process.</p>
+                
+                <div class="highlight">
+                    <strong>Key Challenge:</strong> The glass plate images are very large (especially the .tif files), so the alignment procedure must be both accurate and computationally efficient.
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Technical Approach</h2>
+                <h3>Single-Scale Alignment</h3>
+                <p>I began with a naive implementation using exhaustive search over a window of possible displacements (typically [-15,15] pixels). The algorithm divides the input image into three equal parts and aligns the second and third parts (G and R channels) to the first part (B channel).</p>
+                
+                <h3>Image Matching Metrics</h3>
+                <ul>
+                    <li><strong>L2 Norm (Euclidean Distance):</strong> Simple pixel-wise difference calculation</li>
+                    <li><strong>Normalized Cross-Correlation (NCC):</strong> More robust metric that handles brightness differences between channels</li>
+                </ul>
+                
+                <h3>Pyramid Implementation</h3>
+                <p>For large images, exhaustive search becomes prohibitively expensive. I implemented an image pyramid approach that processes images at multiple scales, starting from the coarsest (smallest) scale and refining the alignment estimate as it progresses down the pyramid.</p>
+            </section>
+
+            <section class="section">
+                <h2>Results</h2>
+                <p>Below are the results of my color reconstruction algorithm on various Prokudin-Gorskii images. Each image shows the final aligned color reconstruction along with the calculated displacement vectors for both blue-to-green and red-to-green alignments.</p>
+                
+                <h3>Example Images</h3>
+                <div class="image-gallery">
+                    <div class="image-container">
+                        <img src="output/cathedral.jpg" alt="Cathedral Reconstruction">
+                        <div class="image-caption">Cathedral</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/monastery.jpg" alt="Monastery Reconstruction">
+                        <div class="image-caption">Monastery</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/emir.jpg" alt="Emir Reconstruction">
+                        <div class="image-caption">Emir of Bukhara</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/church.jpg" alt="Church Reconstruction">
+                        <div class="image-caption">Church</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/harvesters.jpg" alt="Harvesters Reconstruction">
+                        <div class="image-caption">Harvesters</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/icon.jpg" alt="Icon Reconstruction">
+                        <div class="image-caption">Icon</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/italil.jpg" alt="Italil Reconstruction">
+                        <div class="image-caption">Italil</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/lastochikino.jpg" alt="Lastochikino Reconstruction">
+                        <div class="image-caption">Lastochikino</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/lugano.jpg" alt="Lugano Reconstruction">
+                        <div class="image-caption">Lugano</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/melons.jpg" alt="Melons Reconstruction">
+                        <div class="image-caption">Melons</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/self_portrait.jpg" alt="Self Portrait Reconstruction">
+                        <div class="image-caption">Self Portrait</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/siren.jpg" alt="Siren Reconstruction">
+                        <div class="image-caption">Siren</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/three_generations.jpg" alt="Three Generations Reconstruction">
+                        <div class="image-caption">Three Generations</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/tobolsk.jpg" alt="Tobolsk Reconstruction">
+                        <div class="image-caption">Tobolsk</div>
+                        <div class="displacement-info">
+                            <strong>Blue → Green:</strong> (x, y) pixels<br>
+                            <strong>Red → Green:</strong> (x, y) pixels
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Challenges and Solutions</h2>
+                <h3>Brightness Differences</h3>
+                <p>Some images, like the Emir of Bukhara, presented challenges because the different color channels had significantly different brightness values. This required using more sophisticated matching metrics like NCC rather than simple pixel-wise differences.</p>
+                
+                <h3>Large Displacements</h3>
+                <p>The high-resolution .tif files often had large displacements that would make exhaustive search computationally expensive. The pyramid approach significantly improved performance while maintaining accuracy.</p>
+            </section>
+
+            <section class="section">
+                <h2>Personal Images</h2>
+                <p>I also tested my algorithm on additional images from the Prokudin-Gorskii collection to demonstrate its robustness across different types of scenes and photographic conditions.</p>
+                
+                <div class="image-gallery">
+                    <div class="image-container">
+                        <img src="output/bird.jpg" alt="Bird Reconstruction">
+                        <div class="image-caption">Bird - Personal Selection</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/camel.jpg" alt="Camel Reconstruction">
+                        <div class="image-caption">Camel - Personal Selection</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="output/ship.jpg" alt="Ship Reconstruction">
+                        <div class="image-caption">Ship - Personal Selection</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Algorithm Performance</h2>
+                <p>The implemented algorithm successfully processes both small test images and large high-resolution scans. The pyramid approach provides significant speedup while maintaining alignment accuracy. The results demonstrate the effectiveness of automated color reconstruction techniques for historical photographic materials.</p>
+                
+                <div class="highlight">
+                    <strong>Note:</strong> All displacement vectors and processing details are calculated automatically by the algorithm and printed during execution.
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CS180 Portfolio - Project 1</p>
+        </div>
+    </footer>
+</body>
+</html>

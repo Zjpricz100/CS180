@@ -1,7 +1,4 @@
-# CS180 (CS280A): Project 1 starter Python code
 
-# these are just some suggested libraries
-# instead of scikit-image you could use matplotlib and opencv to read, write, and display images
 
 import numpy as np
 import skimage as sk

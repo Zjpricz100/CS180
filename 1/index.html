@@ -207,7 +207,7 @@
 
             <section class="section">
                 <h2>Algorithm</h2>
-                <p>The algorithm starts with preprocessing. I first convert the images to float for memory efficiency, then separate the images into their respective color channels. With each channel sepearted, I first demean each image, crop away the border, then find the neccesary displacements along each axis to align the blue channel to the green channel, and I do the same for aligning the red channel to the green channel. The Green channel serves as the reference channel for alignment. </p>
+                <p>The algorithm starts with preprocessing. I first convert the images to float for memory efficiency, then separate the images into their respective color channels. With each channel sepearted, I first demean each image, crop away the border, then find the neccesary displacements along each axis to align the blue channel to the green channel, and I do the same for aligning the red channel to the green channel. The green channel serves as the reference channel for alignment. </p>
 
                 <h3>Single-Scale Alignment</h3>
                 <p>For low resolution images, it is sufficient to search over a small window of possible displacements (e.g. [-15, 15] pixels), and for each displacement compute a metric to measure similarity between a given channel and the reference channel. The displacement values that perform best with that given metric are chosen, and I align the channel to the reference channel with those displacement values. Once the blue channel and red channel are sufficiently aligned, all three channels can be stacked to form the final color image! We have successfully brought color to the Russian Empire!</p>

@@ -118,7 +118,7 @@ def align_images(img_seperated, dx_VAL, crop_factor=0.1):
     return im_out
 
 max_displacement = 30
-crop_factor = 0.1
+crop_factor = 0.05
 
 def colorize_all_images():
     data_dir = "data"

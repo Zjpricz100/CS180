@@ -15,8 +15,10 @@ def write_output(image, imname):
 
 def read_in_image(imname, gray=False, plot=False):
     im = skio.imread(imname)
+    im = im[:, :, :3]
     if gray and im.ndim == 3:
         im = rgb2gray(im)
+        print(im.shape)
     if plot:
         plt.imshow(im)
         plt.show()

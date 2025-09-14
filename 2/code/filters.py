@@ -1,6 +1,7 @@
 import numpy as np  
 import utils as ut # File utility functions \
 from scipy.signal import convolve2d
+import cv2 as cv
 
 # Kernels
 D_x = np.array([[1, 0, -1]])
@@ -50,16 +51,36 @@ def create_edge_image(img, threshold):
     edge_img[edge_img < threshold] = 0
     return edge_img
 
+# Creates the smoothed image using derivative of gaussian kernel
+def create_edge_image_derivative(img, kernel_size=25, sigma=1, threshold=1e-1):
+    G = cv.getGaussianKernel(kernel_size, sigma)
+    G_kernel = np.outer(G, G.T)
+    DoG_x = convolve2d(G_kernel, D_x)
+    DoG_y = convolve2d(G_kernel, D_y)
+
+    # Now per image we just need one convolution per direction
+    img_Dx = convolve2d(img, DoG_x, mode='same')
+    img_Dy = convolve2d(img, DoG_y, mode='same')
+
+    edge_img = np.sqrt((img_Dx ** 2) + (img_Dy ** 2))
+    edge_img[edge_img >= threshold] = 1
+    edge_img[edge_img < threshold] = 0
+
+    return edge_img
 
 
-
-
-
-img = ut.read_in_image("data/willem.jpg", gray=True)
+def create_edge_image_smoothed(img, kernel_size=25, sigma=1, threshold=1e-1):
+    G = cv.getGaussianKernel(kernel_size, sigma)
+    G_kernel = np.outer(G, G.T)
+    img_smoothed = convolve2d(img, G_kernel)
+    return create_edge_image(img_smoothed, threshold)
 
     
 # Part 1.1: Convolution From Scratch!
 def run_one_point_one():
+
+    img = ut.read_in_image("data/zach.jpg", gray=True)
+
 
     img_box_filtered = convolve2d(img, box_filter)
     ut.write_output(img_box_filtered, "zach_box_scipy.jpg")
@@ -71,13 +92,25 @@ def run_one_point_one():
 
 # Part 1.2: Finite Difference Operator
 def run_one_point_two():
-    edge_img = create_edge_image(img, threshold=1e-1)
-    ut.write_output(edge_img, "willem_edge_img.jpg")
+    threshold=1.25e-1
+    img = ut.read_in_image("data/cameraman.png", gray=True)
+    edge_img = create_edge_image(img, threshold=threshold)
+    ut.write_output(edge_img, "cameraman_edge_img.png")
 
 
 
+def run_one_point_three():
+    threshold=1.25e-1
+    sigma = 2
+    img = ut.read_in_image("data/cameraman.png", gray=True)
+    edge_img_improved = create_edge_image_smoothed(img, sigma=sigma, threshold=threshold)
+    ut.write_output(edge_img_improved, f"cameraman_edge_img_smoothed.png")
 
-run_one_point_two()
+    # Comparing kernels. Verifying it is the same if we convolve D_x and D_y prior 
+    edge_img_DoG = create_edge_image_derivative(img, sigma=sigma, threshold=threshold)
+    ut.write_output(edge_img_DoG, f"cameraman_edge_img_smoothed_DoG.png")
+
+
 
 
 

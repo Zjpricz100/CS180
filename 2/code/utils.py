@@ -9,9 +9,23 @@ def write_output(image, imname):
 
     base_name = os.path.splitext(os.path.basename(imname))[0]
     out_path = os.path.join("output", f"{base_name}.jpg")
-    plt.imsave(out_path, image, cmap="gray")
+    plt.imsave(out_path, image)
 
     print("Saved to ", out_path)
+
+
+def min_max_normalize_image(image):
+    display = np.zeros(image.shape)
+
+    if image.ndim == 3:
+        for c in range(image.shape[2]):
+            ch = image[..., c]
+            display[..., c] = (ch - ch.min()) / (ch.max() - ch.min() + 1e-8)
+    else:
+        print("Not RGB")
+    return display
+
+
 
 def read_in_image(imname, gray=False, plot=False):
     im = skio.imread(imname)

@@ -56,9 +56,22 @@ def show_stack(stack):
         plt.imshow(disp)
         plt.axis("off")
         plt.title(f"Level {i}")
-    
     plt.show()
+    
 
+
+# Visualize stacks
+# img1_name = "data/spline/apple.jpeg"
+# img2_name = "data/spline/orange.jpeg"
+
+# img1 = ut.read_in_image(img1_name)
+# img2 = ut.read_in_image(img2_name)
+
+# apple_stack = build_gaussian_stack(img1, levels=4, sigma_0=6, kernel_0=7)
+# orange_stack = build_gaussian_stack(img2, levels=4, sigma_0=6, kernel_0=7)
+
+# show_stack(apple_stack)
+# show_stack(orange_stack)
 
 
 

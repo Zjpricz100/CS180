@@ -3,6 +3,9 @@ import utils as ut # File utility functions \
 from scipy.signal import convolve2d
 import cv2 as cv
 
+# Library to compare runtimes for convolution implementations
+import timeit
+
 # Kernels
 D_x = np.array([[1, 0, -1]])
 D_y = np.array([[1],
@@ -11,26 +14,38 @@ D_y = np.array([[1],
 box_filter = np.empty((9, 9))
 box_filter.fill(1 / 81)
 
-def convolve2d_two_loops(image, kernel):
+# Reading in Images
+zach_img = ut.read_in_image("data/zach.jpg", gray=True)
+camera_img = ut.read_in_image("data/cameraman.png", gray=True)
+
+
+# Convolution Implementations. Passing padding as 0 is "valid" convolution
+def convolve2d_two_loops(image, kernel, padding=0):
     kernel = np.flip(np.flip(kernel, axis=1), axis=0)
     kH, kW = kernel.shape
     H, W = image.shape
 
-    out_H, out_W = H - kH - 1, W - kW - 1
+    # Padding
+    padded = np.pad(image, pad_width=padding, mode="constant", constant_values=0)
+    pH, pW = padded.shape
+    out_H, out_W = pH - kH - 1, W - kW - 1
     output = np.zeros((out_H, out_W))
 
     for i in range(out_H):
         for j in range(out_W):
-            patch = image[i : i + kH, j : j + kW]
+            patch = padded[i : i + kH, j : j + kW]
             output[i, j] = np.sum(patch * kernel)
     return output
 
-def convolve2d_four_loops(image, kernel):
+def convolve2d_four_loops(image, kernel, padding=0):
     kernel = np.flip(np.flip(kernel, axis=1), axis=0)
     kH, kW = kernel.shape
     H, W = image.shape
 
-    out_H, out_W = H - kH - 1, W - kW - 1
+    # Padding
+    padded = np.pad(image, pad_width=padding, mode="constant", constant_values=0)
+    pH, pW = padded.shape
+    out_H, out_W = pH - kH - 1, W - kW - 1
     output = np.zeros((out_H, out_W))
 
     for i in range(out_H):
@@ -42,6 +57,26 @@ def convolve2d_four_loops(image, kernel):
             output[i][j] = out_val
     return output
 
+# Timing Functions for Convolution
+def time_two_loops():
+    return convolve2d_two_loops(image=zach_img, kernel=box_filter, padding=0)
+
+def time_four_loops():
+    return convolve2d_four_loops(image=zach_img, kernel=box_filter, padding=0)
+
+def time_scipy_convolve():
+    return convolve2d(zach_img, box_filter, mode="valid", boundary="fill", fillvalue=0)
+
+def compare_convolve_runtimes():
+    print("Comparing Runtimes Across Convolution Implementations Across 5 Experiments:")
+
+    # Averaging out runtimes over 5 experiments and comparing
+    #ßprint("Two loops:", timeit.timeit(time_two_loops, number=5))
+   #print("Four loops:", timeit.timeit(time_four_loops, number=5))
+    print("Scipy:", timeit.timeit(time_scipy_convolve, number=5))
+
+
+# Edge images and Derivative Filters
 def create_edge_image(img, threshold):
     img_Dx = convolve2d(img, D_x, mode='same')
     img_Dy = convolve2d(img, D_y, mode='same')
@@ -52,11 +87,15 @@ def create_edge_image(img, threshold):
     return edge_img
 
 # Creates the smoothed image using derivative of gaussian kernel
-def create_edge_image_derivative(img, kernel_size=25, sigma=1, threshold=1e-1):
+def create_edge_image_derivative(img, kernel_size=25, sigma=1, threshold=1e-1, visualize=False):
     G = cv.getGaussianKernel(kernel_size, sigma)
     G_kernel = np.outer(G, G.T)
     DoG_x = convolve2d(G_kernel, D_x)
     DoG_y = convolve2d(G_kernel, D_y)
+
+    if visualize:
+        ut.write_output(DoG_x, "DoG_x.jpg")
+        ut.write_output(DoG_y, "DoG_y.jpg")
 
     # Now per image we just need one convolution per direction
     img_Dx = convolve2d(img, DoG_x, mode='same')
@@ -72,52 +111,55 @@ def create_edge_image_derivative(img, kernel_size=25, sigma=1, threshold=1e-1):
 def create_edge_image_smoothed(img, kernel_size=25, sigma=1, threshold=1e-1):
     G = cv.getGaussianKernel(kernel_size, sigma)
     G_kernel = np.outer(G, G.T)
-    img_smoothed = convolve2d(img, G_kernel)
-    return create_edge_image(img_smoothed, threshold)
-
+    img_smoothed = convolve2d(img, G_kernel, mode='same')
+    return create_edge_image(img_smoothed, threshold) / 255.0
     
-# Part 1.1: Convolution From Scratch!
-def run_one_point_one():
+def test_convolution():
+    zach_img_low_pass = convolve2d(zach_img, box_filter)
+    ut.write_output(zach_img_low_pass, "zach_low_pass.jpg")
 
-    img = ut.read_in_image("data/zach.jpg", gray=True)
+def test_finite_difference_operator():
+    cameraman_dx = convolve2d(camera_img, D_x)
+    cameraman_dy = convolve2d(camera_img, D_y)
+    ut.write_output(cameraman_dx, "cameraman_dx.jpg")
+    ut.write_output(cameraman_dy, "cameraman_dy.jpg")
 
+def test_edge_image():
+    img_Dx = convolve2d(camera_img, D_x, mode='same')
+    img_Dy = convolve2d(camera_img, D_y, mode='same')
 
-    img_box_filtered = convolve2d(img, box_filter)
-    ut.write_output(img_box_filtered, "zach_box_scipy.jpg")
+    edge_img = np.sqrt((img_Dx ** 2) + (img_Dy ** 2))
+    ut.write_output(edge_img, "cameraman_gradient_magnitude.jpg")
 
-    img_Dx = convolve2d_two_loops(img, D_x)
-    img_Dy = convolve2d_two_loops(img, D_y)
-    ut.write_output(img_Dx, "zach_Dx.jpg")
-    ut.write_output(img_Dy, "zach_Dy.jpg")
-
-# Part 1.2: Finite Difference Operator
-def run_one_point_two():
-    threshold=1.25e-1
-    img = ut.read_in_image("data/cameraman.png", gray=True)
-    edge_img = create_edge_image(img, threshold=threshold)
+def test_binary_edge_image():
+    threshold = 3e-1
+    edge_img = create_edge_image(camera_img, threshold=threshold)
     ut.write_output(edge_img, "cameraman_edge_img.png")
 
-
-
-def run_one_point_three():
-    threshold=1.25e-1
-    sigma = 2
-    img = ut.read_in_image("data/cameraman.png", gray=True)
-    edge_img_improved = create_edge_image_smoothed(img, sigma=sigma, threshold=threshold)
+def test_binary_edge_image_denoised():
+    threshold = 1.25e-1
+    sigma = 1.3
+    edge_img_improved = create_edge_image_smoothed(camera_img, sigma=sigma, threshold=threshold)
     ut.write_output(edge_img_improved, f"cameraman_edge_img_smoothed.png")
 
-    # Comparing kernels. Verifying it is the same if we convolve D_x and D_y prior 
-    edge_img_DoG = create_edge_image_derivative(img, sigma=sigma, threshold=threshold)
+    # Comparing kernels. Verifying it is the same if we convolve D_x and D_y prior.
+    edge_img_DoG = create_edge_image_derivative(camera_img, sigma=sigma, threshold=threshold)
     ut.write_output(edge_img_DoG, f"cameraman_edge_img_smoothed_DoG.png")
 
 
+    # Comparing different values of sigma
+    sigmas = [0.5, 0.75, 1, 2, 2.5]
+    for idx, sigma_i in enumerate(sigmas):
+        edge_img_i = create_edge_image_smoothed(camera_img, sigma=sigma_i, threshold=threshold)
+        ut.write_output(edge_img_i, f"cameraman_edge_img_smoothed_sigma={idx}")
+    
 
+#test_binary_edge_image()
+#test_binary_edge_image_denoised()
 
+#test_binary_edge_image()
 
-
-
-
-
+test_binary_edge_image_denoised()
 
 #ut.write_output(img, "zach.jpg")
 

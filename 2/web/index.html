@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 2 - Fun With Filters and Frequencies!</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <header class="project-header">
+        <div class="container">
+            <a href="../../index.html" class="back-link">Back to Portfolio</a>
+            <h1 class="title">Project 2</h1>
+            <p class="subtitle">Fun With Filters and Frequencies!</p>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="project-content">
+            <div style="text-align: center; margin: 2rem 0 3rem 0;">
+                <img src="../code/output/part_2/mononokexeboshi2.jpg" alt="San/Eboshi Hybrid" class="clickable-image" style="max-width: 250px; height: auto;">
+            </div>
+            
+            <section class="section">
+                <h2>Project Overview</h2>
+                <p>This project explores fundamental concepts in digital image processing, focusing on spatial domain filtering, frequency domain analysis, and image blending techniques. The project is divided into two main parts: Part 1 focuses on building intuitions about 2D convolutions and filtering, while Part 2 explores frequency domain processing, hybrid images, and multiresolution blending.</p>
+                
+                <div class="highlight">
+                    <strong>Key Learning Objectives:</strong> Understanding 2D convolutions, implementing filters from scratch, exploring the relationship between spatial and frequency domains, and creating seamless image composites.
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Part 1: Fun with Filters</h2>
+                <p>In this part, we build intuitions about 2D convolutions and filtering, beginning with the humble finite difference filters in the x and y directions. These allow us to detect vertical and horizontal edges respectively.</p>
+
+                <h3>Part 1.1: Convolutions from Scratch!</h3>
+                <p>First as a recap to convolution, I implemented an implementation with two four loops and four for loops to compare and contrast the runtime performance of the convolution operations. I also compared these implementations with the built-in convolution function <code>scipy.signal.convolve2d</code>. </p>
+
+                <p>I took a picture of myself (read as grayscale), wrote out a 9x9 box filter, and convolved the picture with the box filter. I also applied the finite difference operators Dx and Dy.</p>
+
+                <h4>Code Implementation Comparison</h4>
+                <div style="display: flex; justify-content: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_1/four_loops.png" alt="Four Loop Implementation" class="clickable-image" style="max-width: 400px; height: auto;">
+                        <div class="image-caption">Four Loop Implementation</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_1/two_loops.png" alt="Two Loop Implementation" class="clickable-image" style="max-width: 400px; height: auto;">
+                        <div class="image-caption">Two Loop Implementation</div>
+                    </div>
+                </div>
+
+                <h4>Runtime Performance Comparison</h4>
+                <p>After averaging the results across 5 experiments, we can see that scipy is significantly faster due to numerical optimizations and proper vectorization. It is also worth noting that the extra cost of having to compute a patch by patch dot product slows down the four loop implementation significantly.</p>
+                <div style="display: flex; justify-content: center; margin: 2rem 0;">
+                    <table style="border-collapse: collapse; border: 2px solid var(--primary-color); background-color: var(--surface-color);">
+                        <thead>
+                            <tr style="background-color: var(--primary-color); color: white;">
+                                <th style="padding: 1rem; border: 1px solid var(--primary-color);">Implementation</th>
+                                <th style="padding: 1rem; border: 1px solid var(--primary-color);">Average Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 1rem; border: 1px solid var(--border-color);">Two Loops</td>
+                                <td style="padding: 1rem; border: 1px solid var(--border-color);">55.9 seconds</td>
+                            </tr>
+                            <tr style="background-color: rgba(132, 204, 22, 0.1);">
+                                <td style="padding: 1rem; border: 1px solid var(--border-color);">Four Loops</td>
+                                <td style="padding: 1rem; border: 1px solid var(--border-color);">581.1 seconds</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 1rem; border: 1px solid var(--border-color);">Scipy</td>
+                                <td style="padding: 1rem; border: 1px solid var(--border-color);">2.1 seconds</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4>Image Processing Results</h4>
+                <p>To begin apply convolutions to images, I first applied a 9x9 box filter, a finite difference operator D_x, and a finite difference operator D_y to my self portrait. The finite difference operators are defined as:</p>
+                
+                <div class="math-formula">
+                    $$D_x = \begin{bmatrix} 1 & 0 & -1 \end{bmatrix}, \quad D_y = \begin{bmatrix} 1 \\ 0 \\ -1 \end{bmatrix}$$
+                </div>
+
+                <div style="text-align: center; margin: 2rem 0;">
+                    <img src="../code/output/part_1/zach.jpg" alt="Original Self Portrait" class="clickable-image" style="max-width: 300px; height: auto;">
+                    <div class="image-caption">Original Self Portrait</div>
+                </div>
+
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center; flex: 1; min-width: 200px;">
+                        <img src="../code/output/part_1/zach_Dx.jpg" alt="Finite Difference Dx" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Finite Difference Dx</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 200px;">
+                        <img src="../code/output/part_1/zach_box_scipy.jpg" alt="Box Filter (Low Pass)" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Box Filter (Low Pass)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 200px;">
+                        <img src="../code/output/part_1/zach_Dy.jpg" alt="Finite Difference Dy" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Finite Difference Dy</div>
+                    </div>
+                </div>
+                <p>We can see the box filter as a simple, but effective low pass filter resulting in a blurred image due to averaging out the pixel values. We can also see the finite difference operators as simple edge detectors for horizontal and vertical edges. For proper edge detection however, we need to use a more sophisticated operator.</p>
+
+                <h3>Part 1.2: Finite Difference Operator</h3>
+                <p>Lets move on to proper edge detection. We can convolve this image of "The Cameraman" with the finite difference operators D_x and D_y. This gives us once again simple horizontal and vertical edge detection. Next, we can combine the results of each of these operators through the gradient magnitude defined below where Ix and Iy are the images resulting from the finite difference operators:</p>
+
+                <div class="math-formula">
+                    $$|\nabla I| = \sqrt{I_x^2 + I_y^2}$$
+                </div>
+
+                <div class="image-gallery">
+                    <div class="image-container">
+                        <img src="../code/output/part_1/cameraman_dx.jpg" alt="Partial Derivative X" class="clickable-image">
+                        <div class="image-caption">Partial Derivative in X (D_x)</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="../code/output/part_1/cameraman_dy.jpg" alt="Partial Derivative Y" class="clickable-image">
+                        <div class="image-caption">Partial Derivative in Y (D_y)</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="../code/output/part_1/cameraman_gradient_magnitude.jpg" alt="Gradient Magnitude" class="clickable-image">
+                        <div class="image-caption">Gradient Magnitude</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="../code/output/part_1/cameraman_edge_img.jpg" alt="Binarized Edge Image" class="clickable-image">
+                        <div class="image-caption">Binarized Edge Image</div>
+                    </div>
+                </div>
+
+                <p><strong>Threshold Selection:</strong> I chose a threshold that balances finding all real edges while suppressing noise. For the above images, thresholding at 3e-1 was a good balance between finding all edges and suppressing noise.</p>
+
+                <h3>Part 1.3: Derivative of Gaussian (DoG) Filter</h3>
+                <p>Even with threshold tuning, the results with just the gradient magnitude were rather noisy. Luckily, a gaussian filter can be used to smooth the image before applying the graident magnitude. Not only this but through the properties of convolution, this is equivelant to convolving with the derivative of the gaussian filter which means we only need to convolve a filter with an image once in each respective direction!</p>
+
+                <div class="math-formula">
+                    $$\text{DoG}_x = G * D_x, \quad \text{DoG}_y = G * D_y$$
+                </div>
+
+                <p>We can see the results of applying these filters is a much smoother and sharper edge detection then before. Additionally the two methods result in the exact same image. We have made a pretty nice edge detector simply through convolution!</p>
+
+                <div class="image-gallery">
+                    <div class="image-container">
+                        <img src="../code/output/part_1/cameraman_edge_img_smoothed.jpg" alt="Smoothed Edge Detection" class="clickable-image">
+                        <div class="image-caption">Edge Detection with Gaussian Smoothing</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="../code/output/part_1/cameraman_edge_img_smoothed_DoG.jpg" alt="DoG Edge Detection" class="clickable-image">
+                        <div class="image-caption">Derivative of Gaussian (DoG) Edge Detection</div>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <strong>Implementation Note:</strong> I used <code>cv2.getGaussianKernel()</code> to create 1D Gaussian kernels and took the outer product to create 2D Gaussian filters. The DoG filters were created by convolving the Gaussian with D_x and D_y operators.
+                </div>
+
+                <h4>DoG Filter Components</h4>
+                <div class="image-gallery">
+                    <div class="image-container">
+                        <img src="../code/output/part_1/DoG_x.jpg" alt="DoG_x Filter" class="clickable-image">
+                        <div class="image-caption">DoG_x Filter</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="../code/output/part_1/DoG_y.jpg" alt="DoG_y Filter" class="clickable-image">
+                        <div class="image-caption">DoG_y Filter</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Part 2: Fun with Frequencies!</h2>
+
+                <h3>Part 2.1: Image "Sharpening"</h3>
+                <p>We can also use convolution and gaussian filters to sharpen images. Because the gaussian filter is a low pass filter that retains only low frequencies, by subtracting the blurred version of an image from an original image we get the high frequencies. Adding these with a scalar factor, alpha, to the original image allows us to artificially introduce high frequency features resulting in images looking sharper.</p>
+
+                <div class="math-formula">
+                    $$I_{\text{sharp}} = I + \alpha(I - I_{\text{blur}})$$
+                </div>
+
+                <p>This combines into a single convolution operation called the unsharp mask filter.</p>
+
+                <h4>Sharpening Results with Different Alpha Values</h4>
+                
+                <h5>Original Images and High Frequency Components</h5>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/taj_unsharpened.jpg" alt="Original Taj Mahal" class="clickable-image" style="max-width: 250px; height: auto;">
+                        <div class="image-caption">Original Taj Mahal Image</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/taj_high_pass.jpg" alt="Taj High Frequency" class="clickable-image" style="max-width: 250px; height: auto;">
+                        <div class="image-caption">Taj High Frequency Component</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/data/lizard_2.jpg" alt="Original Lizard" class="clickable-image" style="max-width: 250px; height: auto;">
+                        <div class="image-caption">Original Lizard Image</div>
+                    </div>
+                </div>
+
+                <h5>Taj Mahal Sharpening Results</h5>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/taj_sharpen_alpha_0.jpg" alt="Sharpened Taj Mahal α=0.5" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Taj Mahal (α=0.5)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/taj_sharpen_alpha_1.jpg" alt="Sharpened Taj Mahal α=0.75" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Taj Mahal (α=0.75)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/taj_sharpen_alpha_2.jpg" alt="Sharpened Taj Mahal α=1.0" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Taj Mahal (α=1.0)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/taj_sharpen_alpha_3.jpg" alt="Sharpened Taj Mahal α=2.0" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Taj Mahal (α=2.0)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/taj_sharpen_alpha_4.jpg" alt="Sharpened Taj Mahal α=2.5" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Taj Mahal (α=2.5)</div>
+                    </div>
+                </div>
+
+                <h5>Lizard Sharpening Results</h5>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/lizard_sharpen_alpha_0.jpg" alt="Sharpened Lizard α=0.5" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Lizard (α=0.5)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/lizard_sharpen_alpha_1.jpg" alt="Sharpened Lizard α=0.75" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Lizard (α=0.75)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/lizard_sharpen_alpha_2.jpg" alt="Sharpened Lizard α=1.0" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Lizard (α=1.0)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/lizard_sharpen_alpha_3.jpg" alt="Sharpened Lizard α=2.0" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Lizard (α=2.0)</div>
+                    </div>
+                    
+                    <div style="text-align: center; flex: 1; min-width: 150px;">
+                        <img src="../code/output/part_2/lizard_sharpen_alpha_4.jpg" alt="Sharpened Lizard α=2.5" class="clickable-image" style="max-width: 150px; height: auto;">
+                        <div class="image-caption">Sharpened Lizard (α=2.5)</div>
+                    </div>
+                </div>
+<div class="highlight">
+                <p><strong>Note:</strong> It should be noted this technique is cheating a bit. By adding in scaled high frequency features to the image, we are not actually adding any new information that "sharpens" the image. Noneoftherefore, the effect is still noticeable and a useful enhancemnet that is very common in cheaper cameras. </p>
+
+</div>
+                <h3>Part 2.2: Hybrid Images</h3>
+                <p>Hybrid images are static images that change in interpretation as a function of viewing distance. Because high frequencies tend to dominate human perception whenver available, but low frequency (smoother) parts of images appear at a distance, it is possible to construct images that are composed of two images. One seen further away, and the other seen only up close. This technique is based off the <a href="https://web.archive.org/web/20070315210101/http://cvcl.mit.edu/hybrid/OlivaTorralb_Hybrid_Siggraph06.pdf" target="_blank" style="color: var(blue); text-decoration: none; font-weight: 500;">SIGGRAPH 2006 paper by Oliva, Torralba, and Schyns</a> and can be used to create some extremely interesting results.</p>
+
+                <h4>Hybrid Image Results</h4>
+                
+                <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <img src="../code/data/DerekPicture.jpg" alt="Derek Original" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Derek (Low Frequency)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/data/nutmeg.jpg" alt="Nutmeg Original" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Nutmeg (High Frequency)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/derekxnutmeg.jpg" alt="Derek and Nutmeg Hybrid" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Derek/Nutmeg</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <img src="../code/data/heisenburg_2.jpg" alt="Heisenberg Original" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Heisenberg (Low Frequency)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/data/walter.jpg" alt="Walter Original" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Walter (High Frequency)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/walterxheisenburg.jpg" alt="Walter and Heisenberg Hybrid" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Walter/Heisenberg</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <img src="../code/data/mononoke.jpg" alt="Mononoke Original" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">San (Low Frequency)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/data/eboshi.jpg" alt="Eboshi Original" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Lady Eboshi (High Frequency)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/mononokexeboshi2.jpg" alt="Mononoke and Eboshi Hybrid" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">San/Eboshi</div>
+                    </div>
+                </div>
+
+                <h4>Frequency Analysis</h4>
+                <p>For my favorite result (San + Eboshi), I illustrate the process through frequency analysis:</p>
+
+                <h5>Original Images and Their Frequency Components</h5>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <img src="../code/data/mononoke.jpg" alt="San Original" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">San (Original)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/mononoke_freq.jpg" alt="San Frequency Domain" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">San Frequency Domain</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/data/eboshi.jpg" alt="Eboshi Original" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Eboshi (Original)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/eboshi_freq.jpg" alt="Eboshi Frequency Domain" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Eboshi Frequency Domain</div>
+                    </div>
+                </div>
+
+                <h5>Post-Filtered Images and Their Frequency Spectra</h5>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/post_low_pass.jpg" alt="Post Low Pass Filter" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">San (Low Pass Filtered)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/mononoke_low_pass_freq.jpg" alt="San Low Pass Frequency" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">San Low Pass Frequency</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/post_high_pass.jpg" alt="Post High Pass Filter" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Eboshi (High Pass Filtered)</div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/eboshi_high_pass_freq.jpg" alt="Eboshi High Pass Frequency" class="clickable-image" style="max-width: 200px; height: auto;">
+                        <div class="image-caption">Eboshi High Pass Frequency</div>
+                    </div>
+                </div>
+
+                <h5>Cutoff Frequency Choice</h5>
+                <p>For the San/Eboshi hybrid, I carefully selected the cutoff frequencies to achieve optimal blending:</p>
+                <ul>
+                    <li><strong>Low Pass Filter (San):</strong> σ = 4.0 - This preserves the smooth, low-frequency features of San's face while removing fine details</li>
+                    <li><strong>High Pass Filter (Eboshi):</strong> σ = 3.5 - This retains the sharp, high-frequency details of Eboshi's features while removing the smooth background</li>
+                </ul>
+                <p>The choice of these sigma values was determined through experimentation to find the optimal balance between preserving important facial features and achieving seamless blending in the final hybrid image.</p>
+
+                <div class="highlight">
+                    <p><strong>Implementation Note:</strong> In order to create hybrid images, it was necessary to "align" images so San's eyes can overlay Eboshi's eyes. This results in a slight rotation as seen by the post low pass filtered image. This also means I cropped the final image so it appears more clean.</p>
+                </div>
+
+                <h5>Final Hybrid Result</h5>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 2rem 0; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/mononokexeboshi2.jpg" alt="San/Eboshi Hybrid" class="clickable-image" style="max-width: 300px; height: auto;">
+                        <div class="image-caption"><em>San/Eboshi</em></div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <img src="../code/output/part_2/mononokexeboshi_freq.jpg" alt="San/Eboshi Frequency" class="clickable-image" style="max-width: 300px; height: auto;">
+                        <div class="image-caption">San/Eboshi Frequency</div>
+                    </div>
+                </div>
+
+                <h3>Part 2.3: Gaussian and Laplacian Stacks</h3>
+                <p>An exciting application of Gaussian filters and frequency analysis is that it can be combined to create seamless image blending. A gaussian stack can be built by applying a gaussian filter at different scales to the same image. A laplacian stack can then be created by subtracting each level of the gaussian stack from the next lower level. Since Gaussian filters are low pass filters, this resulting difference gives an image composed of frequencies in a particular band allowing us to progressivley blend two images together. The resulting stack from the differences is known as a Laplacian stack. Each level L_i of the stack can be described by the following:</p>
+
+                <div class="math-formula">
+                    $$L_i = G_i - G_{i+1}, \quad \text{where } G_i \text{ is the ith level of the Gaussian stack}$$
+                </div>
+                <p>This process of image blending is described in detail in <a href="https://persci.mit.edu/pub_pdfs/spline83.pdf" target="_blank">Burt & Adelson (1983)</a>.</p>
+                <p>To start, I recreated Figure 3.42 in Szelski's book to show the process of image blending using Gaussian and Laplacian stacks on the famous "Oraple" example. We can see that as we go down the stack the image becomes inceasingly blurred due to reaching lower and lower frequency bands. This is seen in the first 3 rows of the below figure. The final row are the weighted image blends of each image and the final result. </p>
+
+                <div class="image-gallery">
+                    <div class="image-container">
+                        <img src="../code/output/figures/paper_figure.png" alt="Figure 3.42" class="clickable-image">
+                        <div class="image-caption">Figure 3.42</div>
+                    </div>
+                </div>
+<p>We can also visualize the Gaussian and Laplacian stacks directly for a stack with more levels. It is important to note the very last level of the stack is the image with the lowest frequencies. Additionally, I used a larger laplacian stack here to show the results more clearly.</p>
+                <h4>Gaussian and Laplacian Stacks</h4>
+                
+                <h5>Gaussian Stacks</h5>
+                <div class="image-gallery">
+                    <div class="image-container">
+                        <img src="../code/output/figures/orange_stack_gaussian.png" alt="Orange Gaussian Stack" class="clickable-image">
+                        <div class="image-caption">Orange Gaussian Stack</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="../code/output/figures/apple_stack_gaussian.png" alt="Apple Gaussian Stack" class="clickable-image">
+                        <div class="image-caption">Apple Gaussian Stack</div>
+                    </div>
+                </div>
+
+                <h5>Laplacian Stacks</h5>
+                <div class="image-gallery">
+                    <div class="image-container">
+                        <img src="../code/output/figures/orange_stack.png" alt="Orange Laplacian Stack" class="clickable-image">
+                        <div class="image-caption">Orange Laplacian Stack</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <img src="../code/output/figures/apple_stack.png" alt="Apple Laplacian Stack" class="clickable-image">
+                        <div class="image-caption">Apple Laplacian Stack</div>
+                    </div>
+                </div>
+
+                <h3>Part 2.4: Multiresolution Blending (a.k.a. the Oraple!)</h3>
+                <p>Finally, I implemented multiresolution blending described in the paper using these laplacian stacks. For each blend, I take a mask and alpha blend two images together with an increasingly blurrier mask as we go down the stack. This results in a seamless blend of two images. Mathematically, this can be described below for each level of the blended stack we reconstruct.</p>
+
+                <div class="highlight" style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 1rem; margin: 1rem 0;">
+                    <h5 style="color: #155724; margin-top: 0;">Mathematical Foundation of Alpha Blending</h5>
+                    <p style="color: #155724; margin-bottom: 0.5rem;">For each level <em>i</em> of the blend stack, the blended Laplacian level is calculated as:</p>
+                    <div class="math-formula" style="margin: 0.5rem 0;">
+                        $$L_i^{blend} = L_i^{(1)} \cdot M_i + L_i^{(2)} \cdot (1 - M_i)$$
+                    </div>
+                    <p style="color: #155724; margin-bottom: 0.5rem;">where:</p>
+                    <ul style="color: #155724; margin-bottom: 0.5rem;">
+                        <li>$L_i^{(1)}$ and $L_i^{(2)}$ are the <em>i</em>-th levels of the Laplacian stacks for images 1 and 2</li>
+                        <li>$M_i$ is the <em>i</em>-th level of the Gaussian mask stack (increasingly blurred)</li>
+                        <li>$(1 - M_i)$ represents the complementary mask</li>
+                    </ul>
+                    <p style="color: #155724; margin-bottom: 0;">The final blended image is reconstructed by summing all blended levels: $I_{final} = \sum_{i=0}^{n} L_i^{blend}$, then normalized to [0,1] range.</p>
+                </div>
+
+                <h4>Oraple - The Classic Blend</h4>
+                <div style="text-align: center; margin: 2rem 0;">
+                    <img src="../code/output/blends/oraple_final.jpg" alt="Final Oraple" class="clickable-image" style="max-width: 500px; height: auto;">
+                    <div class="image-caption"><em>The Oraple</em></div>
+                </div>
+
+                <h4>Custom Blended Images</h4>
+                <p>Additionally, I created a few custom blended images using irregular masks to demonstrate the power of multiresolution blending:</p>
+
+                <h5>Black Hole Sun</h5>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 2rem 0; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 200px;">
+                        <img src="../code/data/sun.jpg" alt="Sun Image" class="clickable-image" style="max-width: 150px; height: auto; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center;">Sun Image</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 200px;">
+                        <img src="../code/data/black_hole.jpg" alt="Black Hole Image" class="clickable-image" style="max-width: 150px; height: auto; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center;">Black Hole Image</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 200px;">
+                        <img src="../code/data/masks/black_hole_mask.jpg" alt="Black Hole Mask" class="clickable-image" style="max-width: 150px; height: auto; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center;">Blending Mask</div>
+                    </div>
+                    <div style="display: flex; align-items: center; margin: 0 1rem;">
+                        <span style="font-size: 2rem; color: var(--primary-color);">→</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 200px;">
+                        <img src="../code/output/blends/black_hole_sun.jpg" alt="Black Hole Sun Blend" class="clickable-image" style="max-width: 200px; height: auto; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; font-weight: 500;"><em>Black Hole Sun</em></div>
+                    </div>
+                </div>
+
+                <h5>Night Sky Road</h5>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 2rem 0; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 200px;">
+                        <img src="../code/data/night_sky.jpg" alt="Night Sky Image" class="clickable-image" style="max-width: 150px; height: auto; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center;">Night Sky Image</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 200px;">
+                        <img src="../code/data/road.jpg" alt="Road Image" class="clickable-image" style="max-width: 150px; height: auto; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center;">Road Image</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 200px;">
+                        <img src="../code/data/masks/road_mask.jpg" alt="Road Mask" class="clickable-image" style="max-width: 150px; height: auto; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center;">Blending Mask</div>
+                    </div>
+                    <div style="display: flex; align-items: center; margin: 0 1rem;">
+                        <span style="font-size: 2rem; color: var(--primary-color);">→</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 200px;">
+                        <img src="../code/output/blends/night_road.jpg" alt="Night Road Blend" class="clickable-image" style="max-width: 200px; height: auto; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; font-weight: 500;"><em>Starry Road</em></div>
+                    </div>
+                </div>
+            </section>
+
+
+            
+
+            <section class="section">
+                <h2>Conclusion</h2>
+                <p>This project provided comprehensive hands-on experience with fundamental image processing techniques, from basic spatial filtering to advanced frequency domain operations and multiresolution blending. The combination of theoretical understanding and practical implementation revealed the elegance and power of digital image processing algorithms.</p>
+                
+                <p>The project successfully demonstrated how different filtering approaches can be used for various applications, from edge detection to image enhancement and creative compositing. The multiresolution blending technique proved particularly effective for creating seamless image composites, while hybrid images showcased the fascinating intersection of computer vision and human perception.</p>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CS180 Portfolio - Project 2</p>
+        </div>
+    </footer>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div id="modalCaption" class="modal-caption"></div>
+    </div>
+
+    <script>
+        // Get the modal
+        var modal = document.getElementById("imageModal");
+        var modalImg = document.getElementById("modalImage");
+        var captionText = document.getElementById("modalCaption");
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks on any image, open the modal
+        document.addEventListener('click', function(event) {
+            if (event.target.tagName === 'IMG' && event.target.classList.contains('clickable-image')) {
+                modal.style.display = "block";
+                modalImg.src = event.target.src;
+                captionText.innerHTML = event.target.alt;
+            }
+        });
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside the modal, close it
+        modal.onclick = function(event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                modal.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>

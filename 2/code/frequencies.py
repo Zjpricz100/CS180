@@ -50,7 +50,9 @@ def low_pass_img(img, kernel_size=25, sigma=1):
 
 def high_pass_img(img, kernel_size=25, sigma=1):
     img_low_pass = low_pass_img(img, kernel_size, sigma)
-    return img - img_low_pass
+    img_high_pass = img - img_low_pass
+    img_high_pass = ut.min_max_normalize_image(img_high_pass)
+    return img_high_pass
     
 
 
@@ -83,21 +85,18 @@ def hybrid_img(img1, img2, kernel_size=25, sigma_1=1, sigma_2=1, visualize=False
 
 # fft magnitude spectrum for color images
 def compute_fft_magnitude_spectrum(img):
-    channels = []
-    for c in range(img.shape[2]):
-        freq = np.log(np.abs(np.fft.fftshift(np.fft.fft2(img[..., c]))))
-        freq = ut.min_max_normalize_image(freq)
-        channels.append(freq)
-    return np.dstack(channels) 
+    freq = np.log(np.abs(np.fft.fftshift(np.fft.fft2(img[..., 0]))))
+    freq = ut.min_max_normalize_image(freq)
+    return freq 
 
-def test_sharpen_img():
+def test_sharpen_img(img, outpath):
     alphas = [0.5, 0.75, 1, 2, 2.5]
     for idx, alpha_i in enumerate(alphas):
-        sharpen_i = apply_unsharp_mask_filter(taj_img, alpha_i, kernel_size=15, sigma=1)
-        ut.write_output(sharpen_i, f"taj_sharpen_alpha_{idx}")
+        sharpen_i = apply_unsharp_mask_filter(img, alpha_i, kernel_size=15, sigma=1)
+        ut.write_output(sharpen_i, f"{outpath}_sharpen_alpha_{idx}")
 
 def test_hybrid_img(img1, img2, outpath, sigma_1=1, sigma_2=1, crop_params=None, visualize=False):
-    hybrid = hybrid_img(img1, img2, kernel_size=25, sigma_1=sigma_1, sigma_2=sigma_2, visualize=True)
+    hybrid = hybrid_img(img1, img2, kernel_size=25, sigma_1=sigma_1, sigma_2=sigma_2, visualize=visualize)
 
     if crop_params is not None:
         hybrid = ut.crop(hybrid, crop_params[0], crop_params[1], crop_params[2], crop_params[3])
@@ -124,22 +123,19 @@ def test_hybrid_frequencies(img1, img2, hybrid_img, outpaths):
     ut.write_output(img1_low_pass_freq, outpaths[3])
     ut.write_output(img2_high_pass_freq, outpaths[4])
 
+def test_part_sharpening_and_hybrid_images():
+    test_sharpen_img(taj_img, "taj")
+    ut.write_output(high_pass_img(taj_img, kernel_size=15, sigma=1), "taj_high_pass.jpg")
+    test_sharpen_img(lizard_img, "lizard")
+    test_hybrid_img(derek_img, nutmeg_img, "derekxnutmeg.jpg", 4, 3)
+    test_hybrid_img(mononoke_img, eboshi_img, "mononokexeboshi2.jpg", 4, 3.5, crop_params=[0.1, 0, 0.2, 0], visualize=True)
+    test_hybrid_img(heisenburg_img, walter_img, "walterxheisenburg.png", 5, 3.5)
+    outpaths = ["mononoke_freq.jpg", "eboshi_freq.jpg", "mononokexeboshi_freq.jpg", "mononoke_low_pass_freq.jpg", "eboshi_high_pass_freq.jpg"]
+    test_hybrid_frequencies(mononoke_img, eboshi_img, mononoke_eboshi_hybrid_img, outpaths)
 
-# Sharpening the Taj
-#test_sharpen_img()
+# Run to test all functions for sharpening and hybrid images (2.1, 2.2)
+def __main__():
+    test_part_sharpening_and_hybrid_images()
 
-# Derek and Nutmeg
-#test_hybrid_img(derek_img, nutmeg_img, "derekxnutmeg.jpg", 4, 3)
-
-# Mononoke and Eboshi
-#test_hybrid_img(mononoke_img, eboshi_img, "mononokexeboshi2.jpg", 4, 3.5, crop_params=[0.1, 0, 0.2, 0], visualize=True)
-
-# Walter and Heisenburg
-#test_hybrid_img(heisenburg_img, walter_img, "walterxheisenburg.png", 5, 3.5)
-
-# Frequency Components
-#outpaths = ["mononoke_freq.jpg", "eboshi_freq.jpg", "mononokexeboshi_freq.jpg", "mononoke_low_pass_freq.jpg", "eboshi_high_pass_freq.jpg"]
-#test_hybrid_frequencies(mononoke_img, eboshi_img, mononoke_eboshi_hybrid_img, outpaths)
-
-
-
+if __name__ == "__main__":
+    __main__()

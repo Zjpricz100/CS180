@@ -58,26 +58,27 @@ def show_stack(stack):
         plt.title(f"Level {i}")
     plt.show()
     
+def test_stacks():
+    img1_name = "data/spline/apple.jpeg"
+    img2_name = "data/spline/orange.jpeg"
+    img1 = ut.read_in_image(img1_name)
+    img2 = ut.read_in_image(img2_name)
+    apple_stack = build_gaussian_stack(img1, levels=4, sigma_0=6, kernel_0=7)
+    orange_stack = build_gaussian_stack(img2, levels=4, sigma_0=6, kernel_0=7)
+    show_stack(apple_stack)
+    show_stack(orange_stack)
+    apple_stack_laplacian = build_laplacian_stack(img1, levels=6, sigma_0=6, kernel_0=7)
+    orange_stack_laplacian = build_laplacian_stack(img2, levels=6, sigma_0=6, kernel_0=7)
+    show_stack(apple_stack_laplacian)
+    show_stack(orange_stack_laplacian)
 
+# Run to test all functions for stacks (2.3, 2.4)
+def __main__():
+    test_stacks()
 
-# Visualize stacks
-# img1_name = "data/spline/apple.jpeg"
-# img2_name = "data/spline/orange.jpeg"
+if __name__ == "__main__":
+    __main__()
 
-# img1 = ut.read_in_image(img1_name)
-# img2 = ut.read_in_image(img2_name)
-
-# Gaussian
-# apple_stack = build_gaussian_stack(img1, levels=4, sigma_0=6, kernel_0=7)
-# orange_stack = build_gaussian_stack(img2, levels=4, sigma_0=6, kernel_0=7)
-# show_stack(apple_stack)
-# show_stack(orange_stack)
-
-# Laplacian
-# apple_stack_laplacian = build_laplacian_stack(img1, levels=4, sigma_0=6, kernel_0=7)
-# orange_stack_laplacian = build_laplacian_stack(img2, levels=4, sigma_0=6, kernel_0=7)
-# show_stack(apple_stack_laplacian)
-# show_stack(orange_stack_laplacian)
 
 
 

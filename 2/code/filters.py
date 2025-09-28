@@ -115,14 +115,14 @@ def create_edge_image_smoothed(img, kernel_size=25, sigma=1, threshold=1e-1):
     return create_edge_image(img_smoothed, threshold) / 255.0
     
 def test_convolution():
-    zach_img_low_pass = convolve2d(zach_img, box_filter)
+    zach_img_low_pass = convolve2d_two_loops(zach_img, box_filter)
     ut.write_output(zach_img_low_pass, "zach_low_pass.jpg")
 
-def test_finite_difference_operator():
-    cameraman_dx = convolve2d(camera_img, D_x)
-    cameraman_dy = convolve2d(camera_img, D_y)
-    ut.write_output(cameraman_dx, "cameraman_dx.jpg")
-    ut.write_output(cameraman_dy, "cameraman_dy.jpg")
+def test_finite_difference_operator(img, imname):
+    cameraman_dx = convolve2d(img, D_x)
+    cameraman_dy = convolve2d(img, D_y)
+    ut.write_output(cameraman_dx, f"{imname}_dx.jpg")
+    ut.write_output(cameraman_dy, f"{imname}_dy.jpg")
 
 def test_edge_image():
     img_Dx = convolve2d(camera_img, D_x, mode='same')
@@ -153,16 +153,28 @@ def test_binary_edge_image_denoised():
         edge_img_i = create_edge_image_smoothed(camera_img, sigma=sigma_i, threshold=threshold)
         ut.write_output(edge_img_i, f"cameraman_edge_img_smoothed_sigma={idx}")
 
-# Test convolution implementations and runtimes
-#compare_convolve_runtimes()
-
-# Test Finite Difference Operators
-#test_finite_difference_operator()
-
-# Test Naive Edge Image
-#test_binary_edge_image()
-
-# Test Denoised/Derivative of Gaussian Edge Image
-#test_binary_edge_image_denoised()
+def test_DoG_filter_images():
+    G = cv.getGaussianKernel(25, 1)
+    G_kernel = np.outer(G, G.T)
+    DoG_x = convolve2d(G_kernel, D_x)
+    DoG_y = convolve2d(G_kernel, D_y)
+    ut.write_output(DoG_x, "DoG_x.jpg")
+    ut.write_output(DoG_y, "DoG_y.jpg")
 
 
+def test_part_1():
+    test_convolution()
+    compare_convolve_runtimes()
+    test_finite_difference_operator(zach_img, "zach")
+    test_finite_difference_operator(camera_img, "cameraman")
+    test_edge_image()
+    test_binary_edge_image()
+    test_binary_edge_image_denoised()
+    test_DoG_filter_images()
+
+# Run to test all functions for filters (1.1, 1.2, 1.3)
+def __main__():
+    test_part_1()
+
+if __name__ == "__main__":
+    __main__()

@@ -124,14 +124,17 @@ def test_multires_blend(img1, img2, mask, outpath, levels=4, sigma_blend=4, visu
     blended_img = multires_blend(img1, img2, mask_3ch, levels, sigma_blend, visualize)
     ut.write_output(blended_img, outpath)
 
-# Black Hole Sun
-#test_multires_blend(black_hole_img, sun_img, black_hole_mask, "black_hole_sun_2.jpg", 5, 8)
+def test_blend_images():
+    test_multires_blend(black_hole_img, sun_img, black_hole_mask, "black_hole_sun_2.jpg", 5, 8)
+    test_multires_blend(img1, img2, apple_mask, "oraple_final.jpg", levels=3, sigma_blend=6, visualize=True)
+    test_multires_blend(night_sky_img, road_img, road_mask, outpath="night_road.jpg", levels=4, sigma_blend=6, visualize=False)
 
-# Oraple. Pass visualize as True to get the 3.42 Figure
-test_multires_blend(img1, img2, apple_mask, "oraple_final.jpg", levels=3, sigma_blend=6, visualize=True)
+# Run to test all functions for blending (2.3, 2.4)
+def __main__():
+    test_blend_images()
 
-# Night Road
-#test_multires_blend(night_sky_img, road_img, road_mask, outpath="night_road.jpg", levels=4, sigma_blend=6, visualize=False)
+if __name__ == "__main__":
+    __main__()
 
 
 

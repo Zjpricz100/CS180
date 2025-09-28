@@ -5,11 +5,11 @@ import numpy as np
 from skimage.color import rgb2gray
 from skimage import img_as_float
 
-def write_output(image, imname):
-    os.makedirs("./output", exist_ok=True)
+def write_output(image, imname, outpath="final_output"):
+    os.makedirs(outpath, exist_ok=True)
 
     base_name = os.path.splitext(os.path.basename(imname))[0]
-    out_path = os.path.join("output", f"{base_name}.jpg")
+    out_path = os.path.join(outpath, f"{base_name}.jpg")
     plt.imsave(out_path, image, cmap='gray')
 
     print("Saved to ", out_path)

@@ -71,8 +71,8 @@ def compare_convolve_runtimes():
     print("Comparing Runtimes Across Convolution Implementations Across 5 Experiments:")
 
     # Averaging out runtimes over 5 experiments and comparing
-    #ßprint("Two loops:", timeit.timeit(time_two_loops, number=5))
-   #print("Four loops:", timeit.timeit(time_four_loops, number=5))
+    print("Two loops:", timeit.timeit(time_two_loops, number=5))
+    print("Four loops:", timeit.timeit(time_four_loops, number=5))
     print("Scipy:", timeit.timeit(time_scipy_convolve, number=5))
 
 
@@ -152,14 +152,17 @@ def test_binary_edge_image_denoised():
     for idx, sigma_i in enumerate(sigmas):
         edge_img_i = create_edge_image_smoothed(camera_img, sigma=sigma_i, threshold=threshold)
         ut.write_output(edge_img_i, f"cameraman_edge_img_smoothed_sigma={idx}")
-    
 
+# Test convolution implementations and runtimes
+#compare_convolve_runtimes()
+
+# Test Finite Difference Operators
+#test_finite_difference_operator()
+
+# Test Naive Edge Image
 #test_binary_edge_image()
+
+# Test Denoised/Derivative of Gaussian Edge Image
 #test_binary_edge_image_denoised()
 
-#test_binary_edge_image()
-
-test_binary_edge_image_denoised()
-
-#ut.write_output(img, "zach.jpg")
 

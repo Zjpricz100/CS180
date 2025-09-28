@@ -125,10 +125,8 @@ def test_hybrid_frequencies(img1, img2, hybrid_img, outpaths):
     ut.write_output(img2_high_pass_freq, outpaths[4])
 
 
-
 # Sharpening the Taj
 #test_sharpen_img()
-
 
 # Derek and Nutmeg
 #test_hybrid_img(derek_img, nutmeg_img, "derekxnutmeg.jpg", 4, 3)

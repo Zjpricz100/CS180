@@ -67,11 +67,21 @@ def show_stack(stack):
 # img1 = ut.read_in_image(img1_name)
 # img2 = ut.read_in_image(img2_name)
 
+# Gaussian
 # apple_stack = build_gaussian_stack(img1, levels=4, sigma_0=6, kernel_0=7)
 # orange_stack = build_gaussian_stack(img2, levels=4, sigma_0=6, kernel_0=7)
-
 # show_stack(apple_stack)
 # show_stack(orange_stack)
+
+# Laplacian
+# apple_stack_laplacian = build_laplacian_stack(img1, levels=4, sigma_0=6, kernel_0=7)
+# orange_stack_laplacian = build_laplacian_stack(img2, levels=4, sigma_0=6, kernel_0=7)
+# show_stack(apple_stack_laplacian)
+# show_stack(orange_stack_laplacian)
+
+
+
+
 
 
 

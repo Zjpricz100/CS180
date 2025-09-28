@@ -127,7 +127,7 @@ def test_multires_blend(img1, img2, mask, outpath, levels=4, sigma_blend=4, visu
 # Black Hole Sun
 #test_multires_blend(black_hole_img, sun_img, black_hole_mask, "black_hole_sun_2.jpg", 5, 8)
 
-# Oraple
+# Oraple. Pass visualize as True to get the 3.42 Figure
 test_multires_blend(img1, img2, apple_mask, "oraple_final.jpg", levels=3, sigma_blend=6, visualize=True)
 
 # Night Road

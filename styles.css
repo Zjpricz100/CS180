@@ -111,11 +111,18 @@ body {
 }
 
 /* Projects section */
-.projects h2 {
+.projects h2,
+.other-projects h2 {
     font-size: var(--font-size-2xl);
     text-align: center;
     margin-bottom: var(--spacing-xl);
     color: var(--text-primary);
+}
+
+.other-projects {
+    margin-top: var(--spacing-2xl);
+    padding-top: var(--spacing-2xl);
+    border-top: 2px solid var(--border-color);
 }
 
 .project-grid {

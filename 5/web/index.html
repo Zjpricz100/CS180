@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project 5: Diffusion Models & U-Net</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <header class="project-header">
+        <div class="container">
+            <a href="../../index.html" class="back-link">Back to Portfolio</a>
+            <h1 class="title">Project 5</h1>
+            <p class="subtitle">Diffusion Models & Building a U-Net</p>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="project-content">
+            <nav class="section-nav">
+                <a href="#fun-with-diffusion" class="nav-link">Fun with Diffusion Models</a>
+                <a href="#building-unet" class="nav-link">Building a U-Net</a>
+            </nav>
+
+            <section class="banner-section">
+                <div class="banner-container" style="display: flex; justify-content: center; align-items: flex-start; gap: var(--spacing-sm); flex-wrap: nowrap;">
+                    <div class="banner-image-wrapper" style="flex: 1; min-width: 0; max-width: 200px; display: flex; flex-direction: column;">
+                        <img src="../results/visual_anagrams/puppy_christmasvillage_scale7.png" alt="Visual Anagram: Puppy / Christmas Village" class="banner-image visual-anagram" style="border-radius: 0; width: 100%; height: auto;">
+                        <div class="banner-caption">
+                            <span class="caption-default">A cute and happy puppy</span>
+                            <span class="caption-hover">A snowy christmas village</span>
+                        </div>
+                    </div>
+                    <div class="banner-image-wrapper" style="flex: 1; min-width: 0; max-width: 200px; display: flex; flex-direction: column;">
+                        <img src="../results/visual_anagrams/purplepipe_musicgroup_scale7_2.png" alt="Visual Anagram: Orange Cat / Music Group" class="banner-image visual-anagram" style="border-radius: 0; width: 100%; height: auto;">
+                        <div class="banner-caption">
+                            <span class="caption-default">An orange striped cat smoking a purple pipe</span>
+                            <span class="caption-hover">A group of people listening to music</span>
+                        </div>
+                    </div>
+                    <div class="banner-image-wrapper" style="flex: 1; min-width: 0; max-width: 200px; display: flex; flex-direction: column;">
+                        <img src="../results/hybrid_images/mountain_low_face_high_scale7.png" alt="Hybrid Image: Mountain / Face" class="banner-image hybrid-image" style="border-radius: 0; width: 100%; height: auto;">
+                        <div class="banner-caption">
+                            <span class="caption-default">a mountain landscape</span>
+                            <span class="caption-hover">a close-up of a human face</span>
+                        </div>
+                    </div>
+                    <div class="banner-image-wrapper" style="flex: 1; min-width: 0; max-width: 200px; display: flex; flex-direction: column;">
+                        <img src="../results/hybrid_images/skull_low_forest_high_scale7.png" alt="Hybrid Image: Skull / Forest" class="banner-image hybrid-image" style="border-radius: 0; width: 100%; height: auto;">
+                        <div class="banner-caption">
+                            <span class="caption-default">a high quality scene of a forest</span>
+                            <span class="caption-hover">a skull</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="banner-container" style="display: flex; justify-content: center; align-items: center; margin-top: var(--spacing-sm);">
+                    <div class="banner-image-wrapper unet-banner-wrapper" style="max-width: 600px; width: 100%;">
+                        <img src="../results/unet/class_cond_unet/with_adamw/epoch10.png" alt="Class-conditioned UNet samples after 10 epochs" class="banner-image clickable-image" style="border-radius: 0; width: 100%; height: auto; cursor: pointer;">
+                        <div class="banner-caption unet-banner-caption">
+                            <span class="caption-default">Class-conditioned Generative Unet Samples of MNIST</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="overview" class="section">
+                <h2>Project Overview</h2>
+                <p>In Part A, we explore pre-trained diffusion models (DeepFloyd IF) to implement sampling loops, denoising techniques, and creative applications like inpainting and optical illusions. This part focuses on understanding how diffusion models work through hands-on experimentation with a state-of-the-art text-to-image model.</p>
+
+                <div class="callout">
+                    <h3 style="margin-bottom: var(--spacing-xs);">Key Concepts</h3>
+                    <ul>
+                        <li><strong>Forward Process:</strong> Adding noise to images progressively</li>
+                        <li><strong>Denoising:</strong> Removing noise using trained UNet models</li>
+                        <li><strong>Sampling:</strong> Generating images from pure noise</li>
+                        <li><strong>Classifier-Free Guidance (CFG):</strong> Improving generation quality</li>
+                        <li><strong>Image-to-Image:</strong> Editing existing images via SDEdit</li>
+                        <li><strong>Inpainting:</strong> Filling masked regions with new content</li>
+                        <li><strong>Visual Anagrams:</strong> Images that change when flipped</li>
+                        <li><strong>Hybrid Images:</strong> Combining low/high frequencies from different prompts</li>
+                    </ul>
+                </div>
+
+                <h2 id="fun-with-diffusion" style="margin-top: var(--spacing-xl); margin-bottom: var(--spacing-lg);">Fun with Diffusion Models</h2>
+            </section>
+
+            <section id="part0" class="section">
+                <h2>Part 0: Setup and Text Prompts</h2>
+                <p>We use the DeepFloyd IF diffusion model, a two-stage model that generates 64×64 images in the first stage and upsamples them to 256×256 in the second stage. After setting up access to DeepFloyd and generating prompt embeddings, we experiment with custom text prompts.</p>
+
+                <div class="callout">
+                    <h3 style="margin-bottom: var(--spacing-xs);">Setup Notes</h3>
+                    <ul>
+                        <li>Model: DeepFloyd/IF-I-XL-v1.0 from Hugging Face</li>
+                        <li>Prompt embeddings generated via Hugging Face clusters</li>
+                        <li>Random seed used consistently throughout: <strong>777</strong></li>
+                    </ul>
+                </div>
+
+                <h3>Custom Text Prompts</h3>
+                <p>I created several interesting text prompts and generated their embeddings. Here are 3 examples with their generated images at different inference steps:</p>
+
+                <h4>20 Inference Steps</h4>
+                <div class="image-grid">
+                    <div class="image-container">
+                        <img src="../results/butterfly_20iter.png" alt="Butterfly 20 iterations" class="clickable-image">
+                        <div class="image-caption">a detailed butterfly</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/lantern_20iter.png" alt="Lantern 20 iterations" class="clickable-image">
+                        <div class="image-caption">a lantern eminating light</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/mural_20iter.png" alt="Mural 20 iterations" class="clickable-image">
+                        <div class="image-caption">a mural on the side of a building</div>
+                    </div>
+                </div>
+
+                <h4>100 Inference Steps</h4>
+                <div class="image-grid">
+                    <div class="image-container">
+                        <img src="../results/butterfly_100iter.png" alt="Butterfly 100 iterations" class="clickable-image">
+                        <div class="image-caption">a detailed butterfly</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/lantern_100iter.png" alt="Lantern 100 iterations" class="clickable-image">
+                        <div class="image-caption">a lantern eminating light</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/mural_100iter.png" alt="Mural 100 iterations" class="clickable-image">
+                        <div class="image-caption">a mural on the side of a building</div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <p><strong>Reflection:</strong> The generated images show good alignment with their text prompts. The butterfly prompt produces detailed wing patterns, the lantern captures the light emission effect, and the mural displays building-side artwork. Increasing inference steps from 20 to 100 improves image quality and detail, with 100 steps producing sharper, more coherent results. However, the improvement is incremental, suggesting diminishing returns beyond a certain number of steps.</p>
+                </div>
+            </section>
+
+            <section id="part1-1" class="section">
+                <h2>Part 1.1: Implementing the Forward Process</h2>
+                <p>The forward process takes a clean image $x_0$ and adds noise to it at timestep $t$, producing a noisy image $x_t$. This is defined by:</p>
+                <div class="math-formula">
+                    $$x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \epsilon$$
+                </div>
+                <p>where $\epsilon \sim \mathcal{N}(0, I)$ is random noise and $\bar{\alpha}_t$ controls the noise level. We test this on the Berkeley Campanile image at different noise levels.</p>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/denoising/campanile_resized.png" alt="Original Campanile" class="clickable-image">
+                        <div class="image-caption">Original (t=0)</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_250.png" alt="Noisy Campanile at t=250" class="clickable-image">
+                        <div class="image-caption">t=250</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_500.png" alt="Noisy Campanile at t=500" class="clickable-image">
+                        <div class="image-caption">t=500</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_750.png" alt="Noisy Campanile at t=750" class="clickable-image">
+                        <div class="image-caption">t=750</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="part1-2" class="section">
+                <h2>Part 1.2: Classical Denoising</h2>
+                <p>Before using the diffusion model, we attempt to denoise the images using classical Gaussian blur filtering. This serves as a baseline to compare against the learned denoising capabilities of the diffusion model.</p>
+
+                <h4>Noisy Images (Forward Process)</h4>
+                <div class="image-grid">
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_250.png" alt="Noisy at t=250" class="clickable-image">
+                        <div class="image-caption">Noisy at t=250</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_500.png" alt="Noisy at t=500" class="clickable-image">
+                        <div class="image-caption">Noisy at t=500</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_750.png" alt="Noisy at t=750" class="clickable-image">
+                        <div class="image-caption">Noisy at t=750</div>
+                    </div>
+                </div>
+
+                <h4>Classical Denoising (Gaussian Blur)</h4>
+                <div class="image-grid">
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_250_classic_denoise.png" alt="Gaussian blur denoised at t=250" class="clickable-image">
+                        <div class="image-caption">Gaussian Blur Denoised at t=250</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_500_classic_denoise.png" alt="Gaussian blur denoised at t=500" class="clickable-image">
+                        <div class="image-caption">Gaussian Blur Denoised at t=500</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_750_classic_denoise.png" alt="Gaussian blur denoised at t=750" class="clickable-image">
+                        <div class="image-caption">Gaussian Blur Denoised at t=750</div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <p>As expected, classical Gaussian blur filtering struggles to remove noise effectively, especially at higher noise levels. The diffusion model will show significantly better results.</p>
+                </div>
+            </section>
+
+            <section id="part1-3" class="section">
+                <h2>Part 1.3: One-Step Denoising</h2>
+                <p>Now we use the pretrained UNet to denoise images. The UNet predicts the noise in a noisy image, which we can then remove to recover an estimate of the original image. This demonstrates the model's ability to project noisy images back onto the natural image manifold.</p>
+
+                <h4>Noisy Images (Forward Process)</h4>
+                <div class="image-grid">
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_250.png" alt="Noisy at t=250" class="clickable-image">
+                        <div class="image-caption">Noisy at t=250</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_500.png" alt="Noisy at t=500" class="clickable-image">
+                        <div class="image-caption">Noisy at t=500</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_750.png" alt="Noisy at t=750" class="clickable-image">
+                        <div class="image-caption">Noisy at t=750</div>
+                    </div>
+                </div>
+
+                <h4>One-Step Denoised</h4>
+                <div class="image-grid">
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_250_one_step.png" alt="One-step denoised at t=250" class="clickable-image">
+                        <div class="image-caption">One-Step Denoised at t=250</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_500_one_step.png" alt="One-step denoised at t=500" class="clickable-image">
+                        <div class="image-caption">One-Step Denoised at t=500</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanille_750_one_step.png" alt="One-step denoised at t=750" class="clickable-image">
+                        <div class="image-caption">One-Step Denoised at t=750</div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <p>The UNet does a much better job than Gaussian blur, successfully projecting images back onto the natural image manifold. However, quality degrades with more noise, which motivates iterative denoising.</p>
+                </div>
+            </section>
+
+            <section id="part1-4" class="section">
+                <h2>Part 1.4: Iterative Denoising</h2>
+                <p>Instead of denoising in a single step, we implement iterative denoising by taking multiple steps through the diffusion process. We use strided timesteps (starting at 990, stride of 30) to speed up the process while maintaining quality. The iterative denoising formula is:</p>
+
+                <div class="highlight" style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 1rem; margin: 1rem 0;">
+                    <h5 style="color: #155724; margin-top: 0;">Mathematical Foundation of Iterative Denoising</h5>
+                    <p style="color: #155724; margin-bottom: 0.5rem;">The formula for iterative denoising from timestep $t$ to $t'$ (where $t' < t$) is:</p>
+                    <div class="math-formula" style="margin: 0.5rem 0;">
+                        $$x_{t'} = \frac{\sqrt{\bar{\alpha}_{t'}\beta_t}}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\bar{\alpha}_t(1 - \bar{\alpha}_{t'})}}{1 - \bar{\alpha}_t} x_t + v_{\sigma}$$
+                    </div>
+                    <p style="color: #155724; margin-bottom: 0.5rem;">where:</p>
+                    <ul style="color: #155724; margin-bottom: 0.5rem;">
+                        <li>$x_t$ is your image at timestep $t$</li>
+                        <li>$x_{t'}$ is your noisy image at timestep $t'$ where $t' < t$ (less noisy)</li>
+                        <li>$\bar{\alpha}_t$ is defined by $\text{alphas\_cumprod}$, as explained above</li>
+                        <li>$\alpha_t = \frac{\bar{\alpha}_t}{\bar{\alpha}_{t-1}}$</li>
+                        <li>$\beta_t = 1 - \alpha_t$</li>
+                        <li>$x_0$ is our current estimate of the clean image using one-step denoising</li>
+                        <li>$v_{\sigma}$ is random noise, which in the case of DeepFloyd is also predicted. The process to compute this is not very important, so we supply a function, $\text{add\_variance}$, to do this for you.</li>
+                    </ul>
+                    <p style="color: #155724; margin-bottom: 0;">This formula allows us to iteratively denoise an image by moving from noisier timesteps ($t$) to less noisy timesteps ($t'$), effectively interpolating between the noisy signal and the clean image estimate.</p>
+                </div>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/iterative_denoising/t=90.png" alt="t=90" class="clickable-image">
+                        <div class="image-caption">t=90</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/iterative_denoising/t=240.png" alt="t=240" class="clickable-image">
+                        <div class="image-caption">t=240</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/iterative_denoising/t=390.png" alt="t=390" class="clickable-image">
+                        <div class="image-caption">t=390</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/iterative_denoising/t=540.png" alt="t=540" class="clickable-image">
+                        <div class="image-caption">t=540</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/iterative_denoising/t=690.png" alt="t=690" class="clickable-image">
+                        <div class="image-caption">t=690</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/iterative_denoising/final_predicted.png" alt="Final Predicted" class="clickable-image">
+                        <div class="image-caption">Final Predicted</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/iterative_denoising/one_step.png" alt="One-Step Denoising" class="clickable-image">
+                        <div class="image-caption">One-Step Denoising</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/iterative_denoising/classic_gaussian_denoise.png" alt="Classic Gaussian Denoise" class="clickable-image">
+                        <div class="image-caption">Classic Gaussian Denoise</div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <p>Iterative denoising produces the best results, gradually refining the image through multiple steps. One-step denoising struggles with high noise levels, and Gaussian blur is clearly inferior.</p>
+                </div>
+            </section>
+
+            <section id="part1-5" class="section">
+                <h2>Part 1.5: Diffusion Model Sampling</h2>
+                <p>We can generate images from scratch by starting with pure noise and iteratively denoising it. This demonstrates the generative capabilities of the diffusion model.</p>
+
+                <p>Here are 5 sampled images using the prompt "a high quality photo":</p>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/random_sampling/7.png" alt="Sample 1" class="clickable-image">
+                        <div class="image-caption">Sample 1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/random_sampling/2.png" alt="Sample 2" class="clickable-image">
+                        <div class="image-caption">Sample 2</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/random_sampling/3.png" alt="Sample 3" class="clickable-image">
+                        <div class="image-caption">Sample 3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/random_sampling/4.png" alt="Sample 4" class="clickable-image">
+                        <div class="image-caption">Sample 4</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/random_sampling/5.png" alt="Sample 5" class="clickable-image">
+                        <div class="image-caption">Sample 5</div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <p>The generated images show reasonable quality but could be improved. We'll use Classifier-Free Guidance (CFG) in the next section to enhance quality.</p>
+                </div>
+            </section>
+
+            <section id="part1-6" class="section">
+                <h2>Part 1.6: Classifier-Free Guidance (CFG)</h2>
+                <p>Classifier-Free Guidance improves image quality by combining conditional and unconditional noise estimates. The formula is:</p>
+                <div class="math-formula">
+                    $$\hat{\epsilon} = \epsilon_{uncond} + \gamma \times (\epsilon_{cond} - \epsilon_{uncond})$$
+                </div>
+                <p>where $\gamma > 1$ amplifies the effect of the text prompt. We use $\gamma = 7.5$.</p>
+
+                <p>Here are 5 images generated with CFG using the prompt "a high quality photo":</p>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/random_sampling/random_sampling_cfg/1.png" alt="CFG Sample 1" class="clickable-image">
+                        <div class="image-caption">CFG Sample 1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/random_sampling/random_sampling_cfg/5.png" alt="CFG Sample 2" class="clickable-image">
+                        <div class="image-caption">CFG Sample 2</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/random_sampling/random_sampling_cfg/10.png" alt="CFG Sample 3" class="clickable-image">
+                        <div class="image-caption">CFG Sample 3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/random_sampling/random_sampling_cfg/6.png" alt="CFG Sample 4" class="clickable-image">
+                        <div class="image-caption">CFG Sample 4</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/random_sampling/random_sampling_cfg/7.png" alt="CFG Sample 5" class="clickable-image">
+                        <div class="image-caption">CFG Sample 5</div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <p>The images generated with CFG show significantly improved quality and better alignment with the text prompt compared to unconditional sampling.</p>
+                </div>
+            </section>
+
+            <section id="part1-7" class="section">
+                <h2>Part 1.7: Image-to-Image Translation (SDEdit)</h2>
+                <p>SDEdit allows us to edit existing images by adding noise and then denoising with the diffusion model. The amount of noise added controls how much the image changes. We test this on the Campanile and custom images at different noise levels (i_start = [1, 3, 5, 7, 10, 20]).</p>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/denoising/campanile_resized.png" alt="Campanile Original" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/image_to_image/second_run/1.png" alt="i_start=1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/image_to_image/second_run/2.png" alt="i_start=3" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/image_to_image/second_run/3.png" alt="i_start=5" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/image_to_image/second_run/4.png" alt="i_start=7" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/image_to_image/second_run/5.png" alt="i_start=10" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/image_to_image/second_run/6.png" alt="i_start=20" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                </div>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/sdeedit/hat_original.png" alt="Christmas Hat Original" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/hat_1.png" alt="Christmas Hat i_start=1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/hat_2.png" alt="Christmas Hat i_start=3" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/hat_3.png" alt="Christmas Hat i_start=5" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/hat_4.png" alt="Christmas Hat i_start=7" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/hat_5.png" alt="Christmas Hat i_start=10" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/hat_6.png" alt="Christmas Hat i_start=20" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                </div>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/sdeedit/iguana_original.png" alt="Iguana Original" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/iguana_1.png" alt="Iguana i_start=1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/iguana_2.png" alt="Iguana i_start=3" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/iguana_3.png" alt="Iguana i_start=5" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/iguana_4.png" alt="Iguana i_start=7" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/iguana_5.png" alt="Iguana i_start=10" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/sdeedit/iguana_6.png" alt="Iguana i_start=20" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                </div>
+
+                <h3>1.7.1: Hand-Drawn and Web Images</h3>
+                <p>SDEdit works particularly well with non-realistic images like sketches or paintings. Here are examples starting from hand-drawn images and web images:</p>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/web_image_to_image/bear_original.png" alt="Web image bear original" class="clickable-image" style="max-width: 150px; width: auto; height: auto;">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/web_image_to_image/bear1.png" alt="Web image bear edit 1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/web_image_to_image/bear2.png" alt="Web image bear edit 2" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/web_image_to_image/bear3.png" alt="Web image bear edit 3" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/web_image_to_image/bear4.png" alt="Web image bear edit 4" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/web_image_to_image/bear5.png" alt="Web image bear edit 5" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/web_image_to_image/bear6.png" alt="Web image bear edit 6" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                </div>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/sun/sun_drawing_original.png" alt="Hand-drawn sun original" class="clickable-image" style="max-width: 150px; width: auto; height: auto;">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/sun/1.png" alt="Hand-drawn sun edit 1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/sun/2.png" alt="Hand-drawn sun edit 2" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/sun/3.png" alt="Hand-drawn sun edit 3" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/sun/4.png" alt="Hand-drawn sun edit 4" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/sun/5.png" alt="Hand-drawn sun edit 5" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/sun/6.png" alt="Hand-drawn sun edit 6" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                </div>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/tree/tree_drawing_original.png" alt="Hand-drawn tree original" class="clickable-image" style="max-width: 150px; width: auto; height: auto;">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/tree/1.png" alt="Hand-drawn tree edit 1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/tree/2.png" alt="Hand-drawn tree edit 2" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/tree/3.png" alt="Hand-drawn tree edit 3" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/tree/4.png" alt="Hand-drawn tree edit 4" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/tree/5.png" alt="Hand-drawn tree edit 5" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/drawing_image_to_image/tree/6.png" alt="Hand-drawn tree edit 6" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                </div>
+
+                <h3>1.7.2: Inpainting</h3>
+                <p>Inpainting allows us to fill masked regions of an image with new content. We use the RePaint algorithm, which preserves unmasked regions while generating new content in masked areas.</p>
+
+                <div class="image-row-scrollable">
+                    <div class="image-container">
+                        <img src="../results/denoising/campanile_resized.png" alt="Original Campanile" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/campanille/mask.png" alt="Mask" class="clickable-image">
+                        <div class="image-caption">Mask</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/campanille/scale3_noprompt.png" alt="Campanile inpainted no prompt" class="clickable-image">
+                        <div class="image-caption">Inpainted (no prompt, scale=3)</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/campanille/scale_9_frogprompt.png" alt="Campanile inpainted with frog prompt" class="clickable-image">
+                        <div class="image-caption">Inpainted (frog prompt, scale=9)</div>
+                    </div>
+                </div>
+
+                <div class="image-row-scrollable">
+                    <div class="image-container">
+                        <img src="../results/inpainting/bear/bear_original.png" alt="Bear Original" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/bear/bear_mask.png" alt="Bear Mask" class="clickable-image">
+                        <div class="image-caption">Mask</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/bear/bear_to_replace.png" alt="Bear To Replace" class="clickable-image">
+                        <div class="image-caption">To Replace</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/bear/bear_inpainted.png" alt="Bear Inpainted" class="clickable-image">
+                        <div class="image-caption">Inpainted</div>
+                    </div>
+                </div>
+
+                <div class="image-row-scrollable">
+                    <div class="image-container">
+                        <img src="../results/inpainting/hollowknight/hk_original.png" alt="Hollow Knight Original" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/hollowknight/hk_mask.png" alt="Hollow Knight Mask" class="clickable-image">
+                        <div class="image-caption">Mask</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/hollowknight/hk_to_replace.png" alt="Hollow Knight To Replace" class="clickable-image">
+                        <div class="image-caption">To Replace</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/inpainting/hollowknight/inpainted_hk.png" alt="Hollow Knight Inpainted" class="clickable-image">
+                        <div class="image-caption">Inpainted</div>
+                    </div>
+                </div>
+
+                <h3>1.7.3: Text-Conditional Image-to-Image Translation</h3>
+                <p>By using text prompts during SDEdit, we can guide the image transformation. I am using the prompt <code>"a group of frogs playing in a band"</code> for all the following text-guided edits:</p>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/campanille/1.png" alt="Text-guided Campanile 1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/campanille/2.png" alt="Text-guided Campanile 2" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/campanille/3.png" alt="Text-guided Campanile 3" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/campanille/4.png" alt="Text-guided Campanile 4" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/campanille/5.png" alt="Text-guided Campanile 5" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/campanille/6.png" alt="Text-guided Campanile 6" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/denoising/campanile_resized.png" alt="Original Campanile" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                </div>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/bear/1.png" alt="Text-guided bear 1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/bear/2.png" alt="Text-guided bear 2" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/bear/3.png" alt="Text-guided bear 3" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/bear/4.png" alt="Text-guided bear 4" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/bear/5.png" alt="Text-guided bear 5" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/bear/6.png" alt="Text-guided bear 6" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/web_image_to_image/bear_original.png" alt="Original Bear" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                </div>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/balrog/1.png" alt="Text-guided balrog 1" class="clickable-image">
+                        <div class="image-caption">i_start=1</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/balrog/2.png" alt="Text-guided balrog 2" class="clickable-image">
+                        <div class="image-caption">i_start=3</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/balrog/3.png" alt="Text-guided balrog 3" class="clickable-image">
+                        <div class="image-caption">i_start=5</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/balrog/4.png" alt="Text-guided balrog 4" class="clickable-image">
+                        <div class="image-caption">i_start=7</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/balrog/5.png" alt="Text-guided balrog 5" class="clickable-image">
+                        <div class="image-caption">i_start=10</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/balrog/6.png" alt="Text-guided balrog 6" class="clickable-image">
+                        <div class="image-caption">i_start=20</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/text_guided_image_to_image/frog/balrog/balrog_original.png" alt="Original Balrog" class="clickable-image">
+                        <div class="image-caption">Original</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="part1-8" class="section">
+                <h2>Part 1.8: Visual Anagrams</h2>
+                <p>Visual anagrams create optical illusions where an image looks like one thing when viewed normally, but reveals a different image when flipped upside down. We achieve this by averaging noise estimates from two different prompts—one for the normal orientation and one for the flipped orientation.</p>
+
+                <div class="math-formula">
+                    $$\epsilon_1 = \text{CFG}(\text{UNet}(x_t, t, p_1))$$
+                    $$\epsilon_2 = \text{flip}(\text{CFG}(\text{UNet}(\text{flip}(x_t), t, p_2)))$$
+                    $$\epsilon = \frac{\epsilon_1 + \epsilon_2}{2}$$
+                </div>
+
+                <p>where $p_1$ and $p_2$ are two different text prompts, and we average the noise estimates to create the final image.</p>
+
+                <div class="visual-anagram-grid">
+                    <div class="image-container">
+                        <img src="../results/visual_anagrams/puppy_christmasvillage_scale7.png" alt="Visual anagram: Puppy / Christmas Village" class="clickable-image">
+                        <div class="image-caption">
+                            <span class="caption-default">A cute and happy puppy</span>
+                            <span class="caption-hover">a snowy christmas village</span>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/visual_anagrams/purplepipe_musicgroup_scale7_2.png" alt="Visual anagram: Purple Pipe / Music Group" class="clickable-image">
+                        <div class="image-caption">
+                            <span class="caption-default">An orange striped cat smoking a purple pipe</span>
+                            <span class="caption-hover">A group of people listening to music</span>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/visual_anagrams/frogband_lizard_1.png" alt="Visual anagram: Frog Band / Lizard" class="clickable-image">
+                        <div class="image-caption">
+                            <span class="caption-default">a group of frogs playing in a band</span>
+                            <span class="caption-hover">a photo of a lizard</span>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/visual_anagrams/forest_oilpainting_scale7.png" alt="Visual anagram: Forest / Oil Painting" class="clickable-image">
+                        <div class="image-caption">
+                            <span class="caption-default">A high quality scene of a forest</span>
+                            <span class="caption-hover">an oil painting of a person staring into the water</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="part1-9" class="section">
+                <h2>Part 1.9: Hybrid Images</h2>
+                <p>Hybrid images combine low-frequency information from one prompt with high-frequency information from another, similar to Project 2. We use Gaussian blur to separate frequencies and create composite noise estimates.</p>
+
+                <div class="math-formula">
+                    $$\epsilon_1 = \text{CFG}(\text{UNet}(x_t, t, p_1))$$
+                    $$\epsilon_2 = \text{CFG}(\text{UNet}(x_t, t, p_2))$$
+                    $$\epsilon = f_{\text{lowpass}}(\epsilon_1) + f_{\text{highpass}}(\epsilon_2)$$
+                </div>
+
+                <p>where UNet is the diffusion model UNet, $f_{\text{lowpass}}$ is a low pass function, $f_{\text{highpass}}$ is a high pass function, and $p_1$ and $p_2$ are two different text prompt embeddings. Our final noise estimate is $\epsilon$.</p>
+
+                <div class="hybrid-image-row">
+                    <div class="image-container">
+                        <img src="../results/hybrid_images/coffee_low_tophat_high_scale7.png" alt="Hybrid coffee tophat" class="clickable-image">
+                        <div class="image-caption">
+                            <span class="caption-default">a coffee cup</span>
+                            <span class="caption-hover">a top hat</span>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/hybrid_images/skull_low_forest_high_scale7.png" alt="Hybrid skull forest" class="clickable-image">
+                        <div class="image-caption">
+                            <span class="caption-default">a high quality scene of a forest</span>
+                            <span class="caption-hover">a skull</span>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/hybrid_images/mountain_low_face_high_scale7.png" alt="Hybrid mountain face" class="clickable-image">
+                        <div class="image-caption">
+                            <span class="caption-default">a mountain landscape</span>
+                            <span class="caption-hover">a close-up of a human face</span>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/hybrid_images/blocks_low_butterfly_high_scale7.png" alt="Hybrid blocks butterfly" class="clickable-image">
+                        <div class="image-caption">
+                            <span class="caption-default">a detailed butterfly</span>
+                            <span class="caption-hover">abstract colorful blobs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <p>Hybrid images showcase the frequency-domain capabilities of diffusion models, allowing us to create images that appear different at different viewing distances or scales.</p>
+                </div>
+            </section>
+
+            <!-- Section Divider -->
+            <div class="section-divider">
+                <h2 class="section-title">Building a U-Net</h2>
+            </div>
+
+            <section id="building-unet" class="section">
+                <h2>Project Overview</h2>
+                <p>In Part B, we build and train our own flow matching model on MNIST using PyTorch. This involves implementing a UNet architecture from scratch, training it for single-step denoising, and then extending it to iterative flow matching with time and class conditioning.</p>
+
+                <div class="callout">
+                    <h3 style="margin-bottom: var(--spacing-xs);">Key Concepts</h3>
+                    <ul>
+                        <li><strong>UNet Architecture:</strong> Encoder-decoder network with skip connections</li>
+                        <li><strong>Single-Step Denoising:</strong> Training a denoiser to map noisy images to clean images</li>
+                        <li><strong>Flow Matching:</strong> Learning the velocity field to iteratively denoise images</li>
+                        <li><strong>Time Conditioning:</strong> Injecting timestep information into the UNet</li>
+                        <li><strong>Class Conditioning:</strong> Conditioning generation on digit classes (0-9)</li>
+                        <li><strong>Classifier-Free Guidance:</strong> Improving generation quality through guidance</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="part1" class="section">
+                <h2>Part 1: Training a Single-Step Denoising UNet</h2>
+                <p>We start by building a simple one-step denoiser. Given a noisy image, we aim to train a denoiser that maps it to a clean image.</p>
+
+                <h3>1.1 Implementing the UNet</h3>
+                <p>We implement a denoiser as a UNet that maps noisy images to clean images. The objective loss function for training the denoiser is:</p>
+                <div class="math-formula">
+                    $$\mathcal{L} = \mathbb{E}_{z,x}||D_\theta(z) - x||^2$$
+                </div>
+                <p>where $D_\theta$ is the denoiser with parameters $\theta$, $z$ is a noisy image, and $x$ is the corresponding clean image. The expectation is taken over the distribution of noisy-clean image pairs.</p>
+
+                <p>The UNet consists of downsampling and upsampling blocks with skip connections. The architecture uses standard operations like Conv2d, ConvTranspose2d, BatchNorm, GELU activation, and AvgPool2d for flattening/unflattening operations. We use <strong>hidden dimension D = 128</strong> for the single-step denoising UNet.</p>
+
+                <div class="visualization-container">
+                    <img src="../results/unet/unet_architecture.png" alt="UNet Architecture Diagram" class="clickable-image" style="max-width: 100%; width: auto; height: auto; max-height: 600px;">
+                    <div class="image-caption">UNet architecture for denoising: encoder-decoder structure with skip connections. The network takes a noisy 1×28×28 grayscale image as input and outputs a clean 1×28×28 image.</div>
+                </div>
+
+                <div class="visualization-container">
+                    <img src="../results/unet/tensor_ops.png" alt="Tensor Operations Blocks" class="clickable-image" style="max-width: 100%; width: auto; height: auto; max-height: 400px;">
+                    <div class="image-caption">Composed operations using simple tensor operations to make the network deeper. These blocks don't change the tensor's height, width, or number of channels, but add more learnable parameters.</div>
+                </div>
+
+                <h3>1.2 Using the UNet to Train a Denoiser</h3>
+                <p>Recall from equation 1 that we aim to solve the following denoising problem: Given a noisy image $z$, we aim to train a denoiser $D_\theta$ such that it maps $z$ to a clean image $x$. To do so, we can optimize over an L2 loss:</p>
+                <div class="math-formula">
+                    $$\mathcal{L} = \mathbb{E}_{z,x}||D_\theta(z) - x||^2$$
+                </div>
+                <p>To train our denoiser, we need to generate training data pairs of $(z, x)$, where each $x$ is a clean MNIST digit. For each training batch, we can generate $z$ from $x$ using the following noising process (Forward Process):</p>
+                <div class="math-formula">
+                    $$z = x + \sigma \epsilon, \quad \epsilon \sim \mathcal{N}(0, I)$$
+                </div>
+                <p>where $\sigma$ is a scalar noise level and $\epsilon$ is random noise drawn from a standard normal distribution.</p>
+
+                <p>We can visualize the different noising processes over $\sigma \in [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0]$, assuming normalized $x \in [0, 1]$. Note that images become noisier as $\sigma$ increases.</p>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/unet/noisy_samples/sigma0.png" alt="Sigma 0.0" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.0$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/noisy_samples/sigma=0.2.png" alt="Sigma 0.2" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.2$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/noisy_samples/sigma=0.4.png" alt="Sigma 0.4" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.4$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/noisy_samples/sigma=0.5.png" alt="Sigma 0.5" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.5$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/noisy_samples/sigma=0.6.png" alt="Sigma 0.6" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.6$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/noisy_samples/sigma=0.8.png" alt="Sigma 0.8" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.8$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/noisy_samples/sigma=1.0.png" alt="Sigma 1.0" class="clickable-image">
+                        <div class="image-caption">$\sigma = 1.0$</div>
+                    </div>
+                </div>
+
+                <h4>1.2.1 Training</h4>
+                <p>We train the model on the MNIST training set with a <strong>batch size of 256</strong> for <strong>5 epochs</strong>. The model uses a UNet with <strong>hidden dimension D = 128</strong>, <strong>Adam optimizer</strong> with <strong>learning rate 1e-4</strong>, and <strong>noise level $\sigma = 0.5$</strong>.</p>
+
+                <p>Lets sample some results on the test set with <strong>noise level 0.5</strong> after the first and the <strong>5th epoch</strong>. Each image shows three rows: the original image (top), the noisy image with added noise (middle), and the denoised result (bottom). Clearly the model improves as training goes on but its important to note this model is trained only on one <strong>noise level (0.5)</strong> and may not generalize well to other noise levels.</p>
+
+                <div class="image-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_test_samples_sigma_half_epoch1.png" alt="Test samples epoch 1" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 1 epoch</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_test_samples_sigma_half_epoch5.png" alt="Test samples epoch 5" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 5 epochs</div>
+                    </div>
+                </div>
+
+                <div class="visualization-container">
+                    <img src="../results/unet/loss_curve_sigma_half.png" alt="Training Loss Curve" class="clickable-image">
+                    <div class="image-caption">Training loss curve plot every few iterations during the whole training process with $\sigma = 0.5$.</div>
+                </div>
+
+                <h4>1.2.2 Out-of-Distribution Testing</h4>
+                <p>Our denoiser was trained on MNIST digits noised with <strong>$\sigma = 0.5$</strong>. Let's see how it performs on different $\sigma$ values that it wasn't trained for.</p>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_ood_testing/sigma=0.png" alt="Sigma 0.0" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.0$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_ood_testing/sigma=0.2.png" alt="Sigma 0.2" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.2$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_ood_testing/sigma=0.4.png" alt="Sigma 0.4" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.4$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_ood_testing/sigma=0.5.png" alt="Sigma 0.5" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.5$ (training level)</div>
+                    </div>
+                </div>
+
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_ood_testing/sigma=0.6.png" alt="Sigma 0.6" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.6$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_ood_testing/sigma=0.8.png" alt="Sigma 0.8" class="clickable-image">
+                        <div class="image-caption">$\sigma = 0.8$</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_ood_testing/sigma=1.0.png" alt="Sigma 1.0" class="clickable-image">
+                        <div class="image-caption">$\sigma = 1.0$</div>
+                    </div>
+                </div>
+                <p>Clearly the model performs poorly on out-of-distribution noise levels especially at higher noise levels. This is expected as the model was trained only on one noise level (0.5).</p>
+
+                <h4>1.2.3 Denoising Pure Noise</h4>
+                <p>We now transition to making denoising a generative task. We train the model to denoise pure, random Gaussian noise. We can think of this as starting with a blank canvas $x_\sigma$ where <strong>$\sigma = 1$</strong> and denoising it to get a clean image $x_0$. Once again we can display testing samples after the first and the 5th epoch to gauge model performance.</p>
+
+                <div class="image-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_pure_noise_input_epoch=1.png" alt="Pure noise denoising epoch 1" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 1 epoch</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/uncond_pure_noise_input_epoch=5.png" alt="Pure noise denoising epoch 5" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 5 epochs</div>
+                    </div>
+                </div>
+
+                <div class="visualization-container">
+                    <img src="../results/unet/Training_Loss_Curve_Pure_Noise_Input.png" alt="Training loss curve for pure noise denoising" class="clickable-image">
+                    <div class="image-caption">Training loss curve for denoising pure noise</div>
+                </div>
+
+                <div class="callout">
+                    <h4>Key Observation</h4>
+                    <p><strong>The generated outputs show blurry, averaged representations of digits.</strong> With an MSE loss, the model learns to predict the point that minimizes the sum of squared distances to all training examples—essentially the centroid of the digit distribution. This results in outputs that look like averaged versions of all digits rather than distinct digit samples.</p>
+                </div>
+            </section>
+
+            <section id="part2" class="section">
+                <h2>Part 2: Training a Flow Matching Model</h2>
+                <p>One-step denoising does not work well for generative tasks. Instead, we need to iteratively denoise the image using flow matching. We train a UNet model to predict the 'flow' from noisy data to clean data.</p>
+
+                <p>For iterative denoising, we define intermediate noisy samples using linear interpolation between noisy $x_1$ and clean $x_0$. The flow matching formulation is as follows:</p>
+
+                <div class="highlight" style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 1rem; margin: 1rem 0;">
+                    <h5 style="color: #155724; margin-top: 0;">Mathematical Foundation of Flow Matching</h5>
+                    <p style="color: #155724; margin-bottom: 0.5rem;">For iterative denoising, we define intermediate samples and the flow:</p>
+                    <div class="math-formula" style="margin: 0.5rem 0;">
+                        $$x_t = (1-t)x_1 + tx_0, \quad u(x_t, t) = x_1 - x_0$$
+                    </div>
+                    <p style="color: #155724; margin-bottom: 0.5rem;">where:</p>
+                    <ul style="color: #155724; margin-bottom: 0.5rem;">
+                        <li>$x_0$ is a clean image sampled from distribution $p_0(x_0)$</li>
+                        <li>$x_1$ is a noisy image sampled from distribution $p_1(x_1)$</li>
+                        <li>$t \in [0, 1]$ is a timestep sampled uniformly from $U_{[0,1]}$</li>
+                        <li>$x_t$ is the interpolated sample at timestep $t$</li>
+                        <li>$u(x_t, t)$ is the true flow (velocity) from $x_t$ to $x_0$</li>
+                    </ul>
+                    <p style="color: #155724; margin-bottom: 0.5rem;">Our aim is to learn a UNet $u_\theta(x_t, t)$ which approximates this flow, giving us our learning objective:</p>
+                    <div class="math-formula" style="margin: 0.5rem 0;">
+                        $$\mathcal{L} = \mathbb{E}_{x_0 \sim p_0(x_0), x_1 \sim p_1(x_1), t \sim U_{[0,1]}} || (x_1 - x_0) - u_\theta(x_t, t) ||^2$$
+                    </div>
+                </div>
+                <p>We can think of this as training a Unet to solve a ODE problem where the velocity field is given by $u(x_t, t) = x_1 - x_0$. When we have that learned velocity field, we can use it to iteratively denoise the image by solving the ODE backwards in time.</p>
+
+                <h3>2.1 Adding Time Conditioning to UNet</h3>
+                <p>To model a flow matching model, we need a way to incorporate the timestep $t$ into our UNet model. We inject the scalar timestep $t$ into our UNet model using FCBlocks (fully-connected blocks). The key modification is that we concatenate the FCBlock outputs from the embedded timestep $t$ to two specific points in the network: after the Unflatten operation and after the middle UpBlock in the decoder path.</p>
+
+                <div class="visualization-container">
+                    <img src="../results/unet/time_cond_unet/time_cond_architecture.png" alt="Time-Conditioned UNet Architecture Diagram" class="clickable-image" style="max-width: 100%; width: auto; height: auto; max-height: 600px;">
+                    <div class="image-caption">Time-conditioned UNet architecture for flow matching. The scalar timestep $t$ is processed through two FCBlocks, and their outputs are concatenated at two points in the decoder path (highlighted in red) to inject time-dependent information into the network.</div>
+                </div>
+
+                <h4>Training Algorithm</h4>
+                <p>The training algorithm for the time-conditioned UNet is as follows:</p>
+                <div class="visualization-container">
+                    <img src="../results/unet/time_cond_unet/time_cond_training_alg.png" alt="Training Algorithm for Time-Conditioned UNet" class="clickable-image" style="max-width: 100%; width: auto; height: auto; max-height: 300px;">
+                    <div class="image-caption">Training algorithm for the time-conditioned UNet.</div>
+                </div>
+
+                <h3>2.2 Training the UNet</h3>
+                <p>We train the time-conditioned UNet on MNIST with <strong>batch size 64</strong>. The model uses <strong>hidden dimension D = 64</strong>, <strong>Adam optimizer</strong> with <strong>initial learning rate 1e-2</strong>, and an <strong>exponential learning rate decay scheduler</strong> with <strong>gamma = 0.95</strong>.</p>
+
+                <div class="visualization-container">
+                    <img src="../results/unet/time_cond_unet/loss_curve_time_cond.png" alt="Training loss curve for time-conditioned UNet" class="clickable-image">
+                    <div class="image-caption">Training loss curve for the time-conditioned UNet</div>
+                </div>
+
+                <h3>2.3 Sampling from the UNet</h3>
+                <p>We can now use our UNet for iterative denoising. Starting from pure noise, we iteratively apply the learned flow to generate realistic digit images.</p>
+
+                <h4>Sampling Algorithm</h4>
+                <div class="visualization-container">
+                    <img src="../results/unet/time_cond_unet/time_cond_sampling_alg.png" alt="Sampling Algorithm for Time-Conditioned UNet" class="clickable-image" style="max-width: 100%; width: auto; height: auto; max-height: 300px;">
+                    <div class="image-caption">Sampling algorithm for the time-conditioned UNet.</div>
+                </div>
+
+                <div class="image-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="image-container">
+                        <img src="../results/unet/time_cond_unet/samples_epoch=1.png" alt="Time-conditioned samples epoch 1" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 1 epoch</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/time_cond_unet/samples_epoch=5.png" alt="Time-conditioned samples epoch 5" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 5 epochs</div>
+                    </div>
+                </div>
+
+                <div class="image-grid" style="grid-template-columns: 1fr; justify-items: center; max-width: 50%; margin: 0 auto;">
+                    <div class="image-container">
+                        <img src="../results/unet/time_cond_unet/samples_epoch=10.png" alt="Time-conditioned samples epoch 10" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 10 epochs</div>
+                    </div>
+                </div>
+
+                <p>We can see our Unet reaches its performance plateau pretty quickly after 5 epochs. This is a good sign the Unet is learning the flow model reasonably well but there is still plenty of room for improvement. Since time conditioning helped our Unet, lets see if we can improve it further by adding class conditioning.</p>
+
+                <h3>2.4 Adding Class-Conditioning to UNet</h3>
+                <p>To improve results and give us more control for image generation, we condition our UNet on the class of the digit (0-9). We implement classifier-free guidance where 10% of the time we drop the class conditioning vector by setting it to 0.</p>
+
+                <h3>2.5 Training the UNet</h3>
+                <p>Training for the class-conditioned UNet is similar to time-only conditioning, with the addition of class conditioning vectors and periodic unconditional generation. For this, we also introduced a dropout rate of 0.1 to the class conditioning vectors to help the Unet learn the flow model better and prevent overfitting.</p>
+
+                <h4>Training Algorithm</h4>
+                <div class="visualization-container">
+                    <img src="../results/unet/class_cond_unet/class_cond_training_alg.png" alt="Training Algorithm for Class-Conditioned UNet" class="clickable-image" style="max-width: 100%; width: auto; height: auto; max-height: 300px;">
+                    <div class="image-caption">Training algorithm for the class-conditioned UNet.</div>
+                </div>
+
+                <div class="visualization-container">
+                    <img src="../results/unet/class_cond_unet/loss_curve_adamw.png" alt="Training Loss Curve for Class-Conditioned UNet with AdamW" class="clickable-image">
+                    <div class="image-caption">Training loss curve for the class-conditioned UNet with AdamW optimizer.</div>
+                </div>
+
+                <h3>2.6 Sampling from the UNet</h3>
+                <p>We sample with class-conditioning and use classifier-free guidance with guidance scale $\gamma = 1.5$.</p>
+
+                <h4>Sampling Algorithm</h4>
+                <div class="visualization-container">
+                    <img src="../results/unet/class_cond_unet/class_cond_sampling_alg.png" alt="Sampling Algorithm for Class-Conditioned UNet" class="clickable-image" style="max-width: 100%; width: auto; height: auto; max-height: 300px;">
+                    <div class="image-caption">Sampling algorithm for the class-conditioned UNet with classifier-free guidance.</div>
+                </div>
+
+                <h4>With Learning Rate Scheduler</h4>
+                <div class="image-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="image-container">
+                        <img src="../results/unet/class_cond_unet/with_lr_schedule/epoch1.png" alt="Class-conditioned samples epoch 1 with LR schedule" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 1 epoch</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/class_cond_unet/with_lr_schedule/epoch5.png" alt="Class-conditioned samples epoch 5 with LR schedule" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 5 epochs</div>
+                    </div>
+                </div>
+
+                <div class="image-grid" style="grid-template-columns: 1fr; justify-items: center; max-width: 50%; margin: 0 auto;">
+                    <div class="image-container">
+                        <img src="../results/unet/class_cond_unet/with_lr_schedule/epoch10.png" alt="Class-conditioned samples epoch 10 with LR schedule" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 10 epochs</div>
+                    </div>
+                </div>
+
+                <h4>Without Learning Rate Scheduler (AdamW Optimizer)</h4>
+                <p>We removed the exponential learning rate scheduler and compensated by using the <strong>AdamW optimizer</strong>, which provides better weight decay and can help maintain performance without explicit learning rate decay.</p>
+
+                <div class="image-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="image-container">
+                        <img src="../results/unet/class_cond_unet/with_adamw/epoch1.png" alt="Class-conditioned samples epoch 1 with AdamW" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 1 epoch</div>
+                    </div>
+                    <div class="image-container">
+                        <img src="../results/unet/class_cond_unet/with_adamw/epoch5.png" alt="Class-conditioned samples epoch 5 with AdamW" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 5 epochs</div>
+                    </div>
+                </div>
+
+                <div class="image-grid" style="grid-template-columns: 1fr; justify-items: center; max-width: 50%; margin: 0 auto;">
+                    <div class="image-container">
+                        <img src="../results/unet/class_cond_unet/with_adamw/epoch10.png" alt="Class-conditioned samples epoch 10 with AdamW" class="clickable-image" style="max-width: 100%; width: auto; height: auto;">
+                        <div class="image-caption">After 10 epochs</div>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <h4>Compensation Strategy</h4>
+                    <p>To maintain performance without the learning rate scheduler, we switched from Adam to AdamW optimizer. AdamW provides better weight decay handling and can achieve similar convergence behavior through its adaptive learning rate mechanism. The results show that we can achieve comparable quality without explicit learning rate decay, simplifying the training setup while maintaining performance.</p>
+                </div>
+
+                <p>We can see the class-conditioned UNet performs significantly better than the time-conditioned UNet. This is a good sign that class conditioning is helping the Unet learn the flow model better. Lets see if we can improve it further by adding more conditioning. We can also see that the learning rate scheduler was hindering performance, and switching to Adam with weight decay helped achieve better results.</p>
+
+                <p>We have successfully trained a flow matching model that can denoise images and generate realistic digit images!</p>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 CS180 Portfolio - Project 5</p>
+        </div>
+    </footer>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div id="modalCaption" class="modal-caption"></div>
+    </div>
+
+    <script>
+        // Modal interaction for any .clickable-image
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+        const captionText = document.getElementById("modalCaption");
+        const closeBtn = document.getElementsByClassName("close")[0];
+
+        document.addEventListener("click", (event) => {
+            if (event.target.tagName === "IMG" && event.target.classList.contains("clickable-image")) {
+                modal.style.display = "block";
+                modalImg.src = event.target.src;
+                
+                // Try to get caption from nearby banner-caption or image-caption div
+                let caption = event.target.alt || "";
+                const imageWrapper = event.target.closest('.banner-image-wrapper, .image-container');
+                if (imageWrapper) {
+                    const captionDiv = imageWrapper.querySelector('.banner-caption, .image-caption');
+                    if (captionDiv) {
+                        const captionDefault = captionDiv.querySelector('.caption-default');
+                        if (captionDefault) {
+                            caption = captionDefault.textContent.trim();
+                        } else {
+                            caption = captionDiv.textContent.trim();
+                        }
+                    }
+                }
+                
+                captionText.innerHTML = caption;
+                if (event.target.src.endsWith(".gif")) {
+                    modalImg.classList.add("gif-modal");
+                } else {
+                    modalImg.classList.remove("gif-modal");
+                }
+            }
+        });
+
+        closeBtn.onclick = () => {
+            modal.style.display = "none";
+        };
+
+        modal.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                modal.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
